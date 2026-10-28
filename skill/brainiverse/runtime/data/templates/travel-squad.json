@@ -3,15 +3,116 @@
   "name": "Travel Squad",
   "description": "Plans trips: research, budget, itinerary, logistics, and a risk check.",
   "doc": "teams/travel-squad.md",
-  "leader": "captain",
+  "leader": "leader",
   "agents": [
-    {"id": "captain", "archetype": "leader", "name": "Captain", "description": "Leads the mission and communicates with the human."},
-    {"id": "lumen", "archetype": "researcher", "name": "Lumen", "description": "Researches destinations and travel information.", "expertise": ["destinations", "seasonality", "travel advisories"]},
-    {"id": "scout", "archetype": "researcher", "name": "Scout", "description": "Finds local experiences and hidden attractions.", "expertise": ["local experiences", "food", "hidden gems"], "personality": "Adventurous, street-smart, enthusiastic"},
-    {"id": "penny", "archetype": "analyst", "name": "Penny", "description": "Analyzes the budget.", "expertise": ["travel budgeting", "cost comparison"], "personality": "Frugal, sharp, practical"},
-    {"id": "navigator", "archetype": "specialist", "name": "Navigator", "description": "Creates the itinerary.", "expertise": ["itinerary design", "routing", "pacing"]},
-    {"id": "logistics", "archetype": "specialist", "name": "Logistics Expert", "description": "Checks transport and practical constraints.", "expertise": ["transport", "visas", "bookings", "practical constraints"]},
-    {"id": "sentinel", "archetype": "quality_reviewer", "name": "Sentinel", "description": "Reviews risks and verifies important details.", "expertise": ["travel risk", "fact checking"]}
+    {
+      "id": "leader",
+      "archetype": "leader",
+      "position": "Leader",
+      "names": {
+        "people": "Captain",
+        "heroes": "Captain",
+        "professional": "Leader"
+      },
+      "description": "Leads the mission and communicates with the human."
+    },
+    {
+      "id": "researcher",
+      "archetype": "researcher",
+      "position": "Researcher",
+      "names": {
+        "people": "Shirin",
+        "heroes": "Lumen",
+        "professional": "Researcher"
+      },
+      "description": "Researches destinations and travel information.",
+      "expertise": [
+        "destinations",
+        "seasonality",
+        "travel advisories"
+      ]
+    },
+    {
+      "id": "local-explorer",
+      "archetype": "researcher",
+      "position": "Local Explorer",
+      "names": {
+        "people": "Laleh",
+        "heroes": "Scout",
+        "professional": "Local Explorer"
+      },
+      "description": "Finds local experiences and hidden attractions.",
+      "expertise": [
+        "local experiences",
+        "food",
+        "hidden gems"
+      ],
+      "personality": "Adventurous, street-smart, enthusiastic"
+    },
+    {
+      "id": "budget-analyst",
+      "archetype": "analyst",
+      "position": "Budget Analyst",
+      "names": {
+        "people": "Babak",
+        "heroes": "Penny",
+        "professional": "Budget Analyst"
+      },
+      "description": "Analyzes the budget.",
+      "expertise": [
+        "travel budgeting",
+        "cost comparison"
+      ],
+      "personality": "Frugal, sharp, practical"
+    },
+    {
+      "id": "itinerary-planner",
+      "archetype": "specialist",
+      "position": "Itinerary Planner",
+      "names": {
+        "people": "Olivia",
+        "heroes": "Navigator",
+        "professional": "Itinerary Planner"
+      },
+      "description": "Creates the itinerary.",
+      "expertise": [
+        "itinerary design",
+        "routing",
+        "pacing"
+      ]
+    },
+    {
+      "id": "logistics",
+      "archetype": "specialist",
+      "position": "Logistics Expert",
+      "names": {
+        "people": "Ryan",
+        "heroes": "Logistics",
+        "professional": "Logistics Expert"
+      },
+      "description": "Checks transport and practical constraints.",
+      "expertise": [
+        "transport",
+        "visas",
+        "bookings",
+        "practical constraints"
+      ]
+    },
+    {
+      "id": "reviewer",
+      "archetype": "quality_reviewer",
+      "position": "Quality Reviewer",
+      "names": {
+        "people": "Parisa",
+        "heroes": "Sentinel",
+        "professional": "Quality Reviewer"
+      },
+      "description": "Reviews risks and verifies important details.",
+      "expertise": [
+        "travel risk",
+        "fact checking"
+      ]
+    }
   ],
   "workflow": [
     "Understand preferences (dates, budget, interests, style)",

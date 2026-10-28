@@ -11,18 +11,18 @@ No: routine tasks, anything one question to the human can settle.
 ## Workflow
 1. **Prepare.** One-sentence objective. Choose 2–4 participants whose views actually differ or matter.
    ```bash
-   bv meeting start --objective "Choose the product direction" --with lumen,quant,spark
+   bv meeting start --objective "Choose the product direction" --with shirin,kaveh,jake
    ```
-2. **Introduce** them to the human in one line each (name, role, why they're in the room):
-   `bv meeting say M1 "I've invited Lumen for the market, Quant for feasibility, Spark for concepts."`
+2. **Introduce** them to the human in one line each, as Name (Position) and why they're in the room:
+   `bv meeting say M1 "I've invited Shirin (Researcher) for the market, Kaveh (Analyst) for feasibility, Jake (Creative Thinker) for concepts."`
 3. **Gather (round 1).** Ask everyone in parallel:
    ```bash
-   bv meeting ask M1 --agent lumen,quant,spark --prompt "What should we know before choosing a direction?"
+   bv meeting ask M1 --agent shirin,kaveh,jake --prompt "What should we know before choosing a direction?"
    bv task start ready      # then one Agent call per agent_call, in a single message
    ```
    Each submission becomes that agent's message in the transcript.
 4. **Respond to each other (round 2, optional).** Ask specific agents to react to the transcript:
-   `bv meeting ask M1 --agent riddle --prompt "Challenge Spark's top concept using Quant's numbers."`
+   `bv meeting ask M1 --agent neda --prompt "Challenge Jake's top concept using Kaveh's numbers."`
 5. **Surface** disagreements and uncertainties in your own words (`meeting say`).
 6. **Ask the human** focused questions (AskUserQuestion works well for 2–4 options). Record them and the
    answers:
@@ -39,9 +39,9 @@ No: routine tasks, anything one question to the human can settle.
 ## Presenting a meeting to the human
 Show the conversation like a team discussion, not a pile of reports:
 
-> **Captain:** Let's explore this together. I've invited Lumen, Quant and Spark.
-> **Lumen:** *(their actual submitted findings, condensed only if long, never altered in meaning)*
-> **Quant:** …
+> **Captain (Leader):** Let's explore this together. I've invited Shirin, Kaveh and Jake.
+> **Shirin (Researcher):** *(their actual submitted findings, condensed only if long, never altered in meaning)*
+> **Kaveh (Analyst):** …
 > **Captain:** So we have three directions… Which do you prefer?
 
 `bv meeting show M1` gives the transcript. Quote agents faithfully; if you shorten, keep their meaning and
@@ -69,22 +69,30 @@ later meetings get only that meeting's transcript, not other meetings.
 
 ## Direct line: the human talks to one agent
 
-The human may want to skip the Leader and talk to one teammate ("let me ask Penny directly"). The Leader
-becomes a silent relay.
+The human can talk to any teammate at any time: a question about their work, a further request, or just
+a chat ("Babak, why is Kyoto cheaper?", "Tyler, also add a logout button"). The Leader becomes a
+silent relay.
 
 ```bash
-bv chat start penny --topic "budget questions"           # → {"chat": "M2"}
-bv chat say M2 "Can we afford a ryokan night in Kyoto?"  # records the human's words, starts a task
+bv ask babak "Why is Kyoto cheaper than Tokyo?"   # opens (or reuses) the direct line, starts a real invocation
 # → invoke the returned agent_call with the Agent tool
-bv chat show M2                                          # the transcript including Penny's real reply
+bv ask babak "Also check ryokan prices, please."  # same line, same agent, full conversation history
+bv chat show M2                                    # the transcript; M2 is the chat id ask returned
+bv chat end M2                                     # when the human turns back to the Leader
 ```
+
+What the agent gets each time: the conversation so far, a summary of its own earlier results in this
+mission, and its normal tools and permissions. So:
+- **Questions about earlier work** are answered from what it actually did.
+- **Further requests** are done right away with its own tools; files, sources and verified actions are
+  recorded like any task result. Anything beyond its permissions it says so, and you take it from there.
+
 Rules:
-- Pass the human's words **exactly** to `chat say`. Show the agent's reply **verbatim**, prefixed with the
-  agent's name (`**Penny:** …`). No commentary, no summarizing, no correcting, unless the human asks you.
-- Each message is a real invocation with the conversation so far, so the agent remembers the thread.
-- The agent keeps its normal tools and permissions. If the human asks it to do work it can't, it says so.
-- While the line is open, treat the human's messages as addressed to the agent until they say e.g. "back to
-  Captain", "end chat", or address you by name. Then `bv chat end M2` and resume as Leader.
-- If something said in the chat changes the mission (new constraint, decision), confirm with the human
-  after the chat and record it (`mission update`, or a task).
+- Pass the human's words **exactly**. Show the reply **verbatim** under the agent's label,
+  `**Babak (Budget Analyst):** …`. No commentary, summarizing or correcting unless the human asks.
+- Keep routing the human's messages to that agent until they turn back to you ("back to Captain",
+  "thanks Babak", or addressing you). Then `bv chat end <chat>` and resume as Leader.
+- If the conversation changes the mission (new constraint, a decision, new work), confirm with the human
+  and record it (`mission update`, a task, or a decision).
 - The Leader can't open a direct line with itself; the human already talks to the Leader.
+- `bv chat start <agent> --topic "..."` / `bv chat say <chat> "..."` remain for explicit control.

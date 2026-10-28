@@ -164,16 +164,293 @@
         "build"
       ],
       "questions": [
-        "Travel dates and trip length?",
-        "Total budget and currency?",
-        "Interests (food, culture, nature, nightlife...)?",
-        "Travel style and pace (luxury, budget, relaxed, packed)?",
-        "Who is travelling (solo, couple, family, accessibility needs)?"
+        {
+          "id": "dates",
+          "header": "Dates",
+          "question": "When are you travelling, and for how long?",
+          "options": [
+            "I have exact dates",
+            "Flexible within a month",
+            "Flexible within a season",
+            "Not decided yet"
+          ],
+          "answered_if": [
+            "january",
+            "february",
+            "march",
+            "april",
+            "may",
+            "june",
+            "july",
+            "august",
+            "september",
+            "october",
+            "november",
+            "december",
+            "week",
+            "weeks",
+            "days",
+            "weekend",
+            "summer",
+            "winter",
+            "spring",
+            "autumn",
+            "fall"
+          ]
+        },
+        {
+          "id": "budget",
+          "header": "Budget",
+          "question": "What's your budget level?",
+          "options": [
+            "Budget / backpacker",
+            "Mid-range",
+            "Comfort",
+            "Luxury"
+          ],
+          "answered_if": [
+            "€",
+            "$",
+            "£",
+            "budget",
+            "cheap",
+            "luxury",
+            "afford",
+            "euros",
+            "dollars"
+          ]
+        },
+        {
+          "id": "transport",
+          "header": "Transport",
+          "question": "How do you want to get around? (pick all that are fine)",
+          "options": [
+            "My own car / a rental car",
+            "Trains",
+            "Planes",
+            "Buses and ferries"
+          ],
+          "multi": true,
+          "answered_if": [
+            "car",
+            "train",
+            "rail",
+            "flight",
+            "fly",
+            "plane",
+            "drive",
+            "driving",
+            "bus"
+          ],
+          "follow_ups": {
+            "My own car / a rental car": [
+              {
+                "id": "driving",
+                "header": "Driving",
+                "question": "For driving: what applies?",
+                "options": [
+                  "I have an international licence",
+                  "Need a rental with automatic",
+                  "Avoid toll roads / big cities",
+                  "Parking matters at hotels"
+                ],
+                "multi": true
+              }
+            ],
+            "Planes": [
+              {
+                "id": "flights",
+                "header": "Flights",
+                "question": "Flight preferences?",
+                "options": [
+                  "Cheapest, any airline",
+                  "Direct flights only",
+                  "Specific airline / alliance",
+                  "Luggage-included fares"
+                ],
+                "multi": true
+              }
+            ],
+            "Trains": [
+              {
+                "id": "rail",
+                "header": "Rail",
+                "question": "Train preferences?",
+                "options": [
+                  "Rail pass if it pays off",
+                  "Fastest trains",
+                  "Scenic routes",
+                  "Reserved seats"
+                ],
+                "multi": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "travellers",
+          "header": "Travellers",
+          "question": "Who is travelling?",
+          "options": [
+            "Just me",
+            "A couple",
+            "Family with kids",
+            "Group of friends"
+          ],
+          "answered_if": [
+            "solo",
+            "alone",
+            "wife",
+            "husband",
+            "partner",
+            "girlfriend",
+            "boyfriend",
+            "family",
+            "kids",
+            "friends",
+            "we "
+          ],
+          "follow_ups": {
+            "Family with kids": [
+              {
+                "id": "kids",
+                "header": "Kids",
+                "question": "How old are the kids?",
+                "options": [
+                  "Under 3",
+                  "3-7",
+                  "8-12",
+                  "Teenagers"
+                ],
+                "multi": true
+              }
+            ],
+            "Group of friends": [
+              {
+                "id": "group",
+                "header": "Group",
+                "question": "How big is the group and does everyone share the budget? (free text)"
+              }
+            ]
+          }
+        },
+        {
+          "id": "pace",
+          "header": "Pace",
+          "question": "What pace do you enjoy?",
+          "options": [
+            "Relaxed, few moves",
+            "Balanced",
+            "Packed, see everything"
+          ],
+          "answered_if": [
+            "relaxed",
+            "slow",
+            "packed",
+            "fast-paced"
+          ]
+        },
+        {
+          "id": "interests",
+          "header": "Interests",
+          "question": "What do you want to spend time on?",
+          "options": [
+            "Food and drink",
+            "Culture and history",
+            "Nature and outdoors",
+            "Nightlife and shopping"
+          ],
+          "multi": true,
+          "answered_if": [
+            "food",
+            "temple",
+            "museum",
+            "history",
+            "culture",
+            "nature",
+            "hiking",
+            "beach",
+            "nightlife",
+            "shopping"
+          ]
+        },
+        {
+          "id": "stay",
+          "header": "Stays",
+          "question": "Where do you like to stay?",
+          "options": [
+            "Hotels",
+            "Hostels",
+            "Apartments / rentals",
+            "Traditional or unusual stays"
+          ],
+          "multi": true,
+          "answered_if": [
+            "hotel",
+            "hostel",
+            "airbnb",
+            "apartment",
+            "ryokan",
+            "camping"
+          ]
+        },
+        {
+          "id": "needs",
+          "header": "Needs",
+          "question": "Anything the plan must account for?",
+          "options": [
+            "Accessibility",
+            "Dietary restrictions",
+            "Visa or passport questions",
+            "Nothing special"
+          ],
+          "multi": true,
+          "follow_ups": {
+            "Dietary restrictions": [
+              {
+                "id": "diet",
+                "header": "Diet",
+                "question": "Which dietary needs? (free text)"
+              }
+            ],
+            "Accessibility": [
+              {
+                "id": "access",
+                "header": "Access",
+                "question": "Which accessibility needs should every stop meet? (free text)"
+              }
+            ]
+          }
+        },
+        {
+          "id": "booking",
+          "header": "Booking",
+          "question": "Should the team book anything?",
+          "options": [
+            "Plan only, I'll book",
+            "Prepare booking links and a checklist",
+            "Book things, with my approval for each"
+          ],
+          "follow_ups": {
+            "Book things, with my approval for each": [
+              {
+                "id": "payment",
+                "header": "Payment",
+                "question": "How will bookings be paid? (free text; the team never stores card details)"
+              }
+            ]
+          }
+        }
       ],
       "specialists": [
         {
-          "id": "navigator",
-          "name": "Navigator",
+          "id": "itinerary-planner",
+          "position": "Itinerary Planner",
+          "names": {
+            "people": "Olivia",
+            "heroes": "Navigator",
+            "professional": "Itinerary Planner"
+          },
           "archetype": "specialist",
           "expertise": [
             "itinerary design",
@@ -187,8 +464,13 @@
           ]
         },
         {
-          "id": "penny",
-          "name": "Penny",
+          "id": "budget-analyst",
+          "position": "Budget Analyst",
+          "names": {
+            "people": "Babak",
+            "heroes": "Penny",
+            "professional": "Budget Analyst"
+          },
           "archetype": "analyst",
           "expertise": [
             "travel budgeting",
@@ -209,7 +491,12 @@
         },
         {
           "id": "logistics",
-          "name": "Logistics Expert",
+          "position": "Logistics Expert",
+          "names": {
+            "people": "Ryan",
+            "heroes": "Logistics",
+            "professional": "Logistics Expert"
+          },
           "archetype": "specialist",
           "expertise": [
             "transport",
@@ -246,15 +533,203 @@
         "build"
       ],
       "questions": [
-        "Target platform and preferred stack?",
-        "Is there an existing codebase?",
-        "Who are the users and what is the core use case?",
-        "Deployment target and timeline?"
+        {
+          "id": "codebase",
+          "header": "Codebase",
+          "question": "Is there existing code?",
+          "options": [
+            "New project from scratch",
+            "Existing code in this folder",
+            "Existing code elsewhere"
+          ],
+          "answered_if": [
+            "existing",
+            "this repo",
+            "this project",
+            "my codebase",
+            "refactor"
+          ],
+          "follow_ups": {
+            "Existing code elsewhere": [
+              {
+                "id": "repo",
+                "header": "Repo",
+                "question": "Where is the code (link or path), and can the team change it? (free text)"
+              }
+            ]
+          }
+        },
+        {
+          "id": "platform",
+          "header": "Platform",
+          "question": "Where should it run?",
+          "options": [
+            "Web",
+            "iOS",
+            "Android",
+            "Desktop / command line"
+          ],
+          "multi": true,
+          "answered_if": [
+            "web",
+            "website",
+            "ios",
+            "android",
+            "mobile",
+            "desktop",
+            "cli"
+          ]
+        },
+        {
+          "id": "stack",
+          "header": "Stack",
+          "question": "Any preferred technology stack?",
+          "options": [
+            "You choose",
+            "JavaScript / TypeScript",
+            "Python",
+            "Something else (tell me)"
+          ],
+          "answered_if": [
+            "react",
+            "next",
+            "vue",
+            "node",
+            "typescript",
+            "python",
+            "django",
+            "flask",
+            "rails",
+            "go ",
+            "rust",
+            "swift",
+            "kotlin"
+          ]
+        },
+        {
+          "id": "users",
+          "header": "Users",
+          "question": "Who will use it?",
+          "options": [
+            "Just me",
+            "My team / internal",
+            "Public users",
+            "Paying customers"
+          ],
+          "follow_ups": {
+            "Paying customers": [
+              {
+                "id": "compliance",
+                "header": "Compliance",
+                "question": "Any compliance needs?",
+                "options": [
+                  "GDPR / privacy",
+                  "Accessibility (WCAG)",
+                  "Industry rules (health, finance)",
+                  "None I know of"
+                ],
+                "multi": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "features",
+          "header": "Features",
+          "question": "What must the first version do? (free text)"
+        },
+        {
+          "id": "accounts",
+          "header": "Accounts",
+          "question": "What does it need to handle?",
+          "options": [
+            "User accounts / login",
+            "Payments",
+            "Personal or sensitive data",
+            "None of these"
+          ],
+          "multi": true,
+          "answered_if": [
+            "login",
+            "auth",
+            "payment",
+            "stripe"
+          ],
+          "follow_ups": {
+            "Payments": [
+              {
+                "id": "payments",
+                "header": "Payments",
+                "question": "How should payments work?",
+                "options": [
+                  "Stripe",
+                  "Paddle / Lemon Squeezy",
+                  "In-app purchases",
+                  "Not sure yet"
+                ]
+              }
+            ],
+            "User accounts / login": [
+              {
+                "id": "auth",
+                "header": "Login",
+                "question": "How should people sign in?",
+                "options": [
+                  "Email + password",
+                  "Magic link",
+                  "Google / Apple / GitHub",
+                  "Not sure yet"
+                ],
+                "multi": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "hosting",
+          "header": "Hosting",
+          "question": "Where will it be deployed?",
+          "options": [
+            "Locally only for now",
+            "I already have hosting",
+            "Recommend something",
+            "Decide later"
+          ],
+          "answered_if": [
+            "vercel",
+            "netlify",
+            "aws",
+            "heroku",
+            "fly.io",
+            "docker",
+            "kubernetes"
+          ]
+        },
+        {
+          "id": "quality",
+          "header": "Quality bar",
+          "question": "How careful should the team be?",
+          "options": [
+            "Fast prototype",
+            "Solid MVP with tests",
+            "Production-grade"
+          ],
+          "answered_if": [
+            "prototype",
+            "mvp",
+            "production"
+          ]
+        }
       ],
       "specialists": [
         {
           "id": "architect",
-          "name": "Architect",
+          "position": "Architect",
+          "names": {
+            "people": "Arash",
+            "heroes": "Architect",
+            "professional": "Architect"
+          },
           "archetype": "specialist",
           "expertise": [
             "system design",
@@ -265,7 +740,12 @@
         },
         {
           "id": "coder",
-          "name": "Coder",
+          "position": "Coder",
+          "names": {
+            "people": "Tyler",
+            "heroes": "Coder",
+            "professional": "Coder"
+          },
           "archetype": "executor",
           "expertise": [
             "implementation",
@@ -278,7 +758,12 @@
         },
         {
           "id": "tester",
-          "name": "Tester",
+          "position": "Tester",
+          "names": {
+            "people": "Nick",
+            "heroes": "Tester",
+            "professional": "Tester"
+          },
           "archetype": "quality_reviewer",
           "expertise": [
             "automated testing",
@@ -290,8 +775,13 @@
           ]
         },
         {
-          "id": "security-guardian",
-          "name": "Security Guardian",
+          "id": "security",
+          "position": "Security Reviewer",
+          "names": {
+            "people": "Ben",
+            "heroes": "Guardian",
+            "professional": "Security Reviewer"
+          },
           "archetype": "challenger",
           "expertise": [
             "application security",
@@ -313,7 +803,12 @@
         },
         {
           "id": "devops",
-          "name": "DevOps Engineer",
+          "position": "DevOps Engineer",
+          "names": {
+            "people": "Jason",
+            "heroes": "DevOps",
+            "professional": "DevOps Engineer"
+          },
           "archetype": "executor",
           "expertise": [
             "CI/CD",
@@ -355,14 +850,55 @@
         "risk"
       ],
       "questions": [
-        "Target customer and market?",
-        "Available capital and runway?",
-        "What would make the idea worth pursuing for you?"
+        {
+          "id": "customer",
+          "header": "Customer",
+          "question": "Who is the target customer? (free text)"
+        },
+        {
+          "id": "stage",
+          "header": "Stage",
+          "question": "Where is the idea today?",
+          "options": [
+            "Just an idea",
+            "Validating it",
+            "Already have customers"
+          ]
+        },
+        {
+          "id": "capital",
+          "header": "Capital",
+          "question": "How would you fund it?",
+          "options": [
+            "Bootstrapped / side project",
+            "Some savings",
+            "Planning to raise money"
+          ],
+          "follow_ups": {
+            "Planning to raise money": [
+              {
+                "id": "raise",
+                "header": "Raise",
+                "question": "How much, from whom, and by when? (free text)"
+              }
+            ]
+          }
+        },
+        {
+          "id": "worth",
+          "header": "Worth it",
+          "question": "What would make it worth pursuing for you? (free text)"
+        }
       ],
       "specialists": [
         {
-          "id": "sherlock",
-          "name": "Sherlock",
+          "id": "market-researcher",
+          "position": "Market Researcher",
+          "names": {
+            "people": "Madison",
+            "heroes": "Sherlock",
+            "professional": "Market Researcher"
+          },
           "archetype": "researcher",
           "expertise": [
             "market research",
@@ -374,8 +910,13 @@
           ]
         },
         {
-          "id": "brain",
-          "name": "Brain",
+          "id": "financial-analyst",
+          "position": "Financial Analyst",
+          "names": {
+            "people": "Reza",
+            "heroes": "Brain",
+            "professional": "Financial Analyst"
+          },
           "archetype": "analyst",
           "expertise": [
             "financial modeling",
@@ -410,13 +951,42 @@
         "analysis"
       ],
       "questions": [
-        "What depth is needed (overview, literature review, experimental design)?",
-        "Any required sources or exclusions?"
+        {
+          "id": "depth",
+          "header": "Depth",
+          "question": "How deep should the team go?",
+          "options": [
+            "Quick overview",
+            "Literature review",
+            "Experimental design",
+            "Full report"
+          ]
+        },
+        {
+          "id": "sources",
+          "header": "Sources",
+          "question": "Which sources count?",
+          "options": [
+            "Peer-reviewed only",
+            "Include preprints",
+            "Any credible source"
+          ]
+        },
+        {
+          "id": "field",
+          "header": "Field",
+          "question": "Which field or question exactly? (free text)"
+        }
       ],
       "specialists": [
         {
           "id": "scholar",
-          "name": "Scholar",
+          "position": "Scholar",
+          "names": {
+            "people": "Ashley",
+            "heroes": "Scholar",
+            "professional": "Scholar"
+          },
           "archetype": "specialist",
           "expertise": [
             "literature review",
@@ -445,15 +1015,76 @@
         "build"
       ],
       "questions": [
-        "Current level and background?",
-        "Hours per week available?",
-        "Goal (job, exam, project, curiosity)?",
-        "Preferred formats (video, books, hands-on)?"
+        {
+          "id": "level",
+          "header": "Level",
+          "question": "What's your current level?",
+          "options": [
+            "Complete beginner",
+            "Know the basics",
+            "Intermediate",
+            "Advanced"
+          ],
+          "answered_if": [
+            "beginner",
+            "basics",
+            "intermediate",
+            "advanced"
+          ]
+        },
+        {
+          "id": "time",
+          "header": "Time",
+          "question": "How much time per week?",
+          "options": [
+            "1-3 hours",
+            "4-7 hours",
+            "8-15 hours",
+            "More than 15"
+          ]
+        },
+        {
+          "id": "goal",
+          "header": "Goal",
+          "question": "Why are you learning it?",
+          "options": [
+            "For a job",
+            "For an exam",
+            "To build a project",
+            "Curiosity"
+          ],
+          "follow_ups": {
+            "For an exam": [
+              {
+                "id": "exam",
+                "header": "Exam",
+                "question": "Which exam and when? (free text)"
+              }
+            ]
+          }
+        },
+        {
+          "id": "format",
+          "header": "Format",
+          "question": "How do you like to learn?",
+          "options": [
+            "Videos",
+            "Books and articles",
+            "Hands-on projects",
+            "Structured courses"
+          ],
+          "multi": true
+        }
       ],
       "specialists": [
         {
           "id": "mentor",
-          "name": "Mentor",
+          "position": "Mentor",
+          "names": {
+            "people": "Rachel",
+            "heroes": "Mentor",
+            "professional": "Mentor"
+          },
           "archetype": "specialist",
           "expertise": [
             "curriculum design",
@@ -488,13 +1119,43 @@
         "build"
       ],
       "questions": [
-        "Which areas of life matter most right now?",
-        "Which tools do you already use (calendar, notes, task app)?"
+        {
+          "id": "areas",
+          "header": "Areas",
+          "question": "Which areas matter most right now?",
+          "options": [
+            "Work",
+            "Health and fitness",
+            "Home and family",
+            "Money"
+          ],
+          "multi": true
+        },
+        {
+          "id": "style",
+          "header": "Style",
+          "question": "What kind of system suits you?",
+          "options": [
+            "Simple, on paper",
+            "Digital apps",
+            "Automated as much as possible"
+          ]
+        },
+        {
+          "id": "tools",
+          "header": "Tools",
+          "question": "Which tools do you already use? (free text)"
+        }
       ],
       "specialists": [
         {
           "id": "coach",
-          "name": "Coach",
+          "position": "Life Coach",
+          "names": {
+            "people": "Chris",
+            "heroes": "Coach",
+            "professional": "Life Coach"
+          },
           "archetype": "specialist",
           "expertise": [
             "habit design",
@@ -524,13 +1185,38 @@
         "analysis"
       ],
       "questions": [
-        "Where does the data live and how large is it?",
-        "Which question should the analysis answer?"
+        {
+          "id": "location",
+          "header": "Data",
+          "question": "Where does the data live and how big is it? (free text)"
+        },
+        {
+          "id": "question",
+          "header": "Question",
+          "question": "Which question should the analysis answer? (free text)"
+        },
+        {
+          "id": "output",
+          "header": "Output",
+          "question": "What should come out of it?",
+          "options": [
+            "Charts",
+            "A written report",
+            "A dashboard",
+            "A model or prediction"
+          ],
+          "multi": true
+        }
       ],
       "specialists": [
         {
           "id": "data-engineer",
-          "name": "Pipeline",
+          "position": "Data Engineer",
+          "names": {
+            "people": "Brandon",
+            "heroes": "Pipeline",
+            "professional": "Data Engineer"
+          },
           "archetype": "executor",
           "expertise": [
             "data cleaning",
@@ -565,14 +1251,44 @@
         "comms"
       ],
       "questions": [
-        "Target audience and channels?",
-        "Budget and timeline?",
-        "Brand voice constraints?"
+        {
+          "id": "audience",
+          "header": "Audience",
+          "question": "Who is the audience? (free text)"
+        },
+        {
+          "id": "channels",
+          "header": "Channels",
+          "question": "Which channels?",
+          "options": [
+            "Social media",
+            "Email",
+            "Paid ads",
+            "Content / SEO"
+          ],
+          "multi": true
+        },
+        {
+          "id": "budget",
+          "header": "Budget",
+          "question": "Marketing budget?",
+          "options": [
+            "None",
+            "Small",
+            "Medium",
+            "Large"
+          ]
+        }
       ],
       "specialists": [
         {
           "id": "marketer",
-          "name": "Megaphone",
+          "position": "Marketing Strategist",
+          "names": {
+            "people": "Jessica",
+            "heroes": "Megaphone",
+            "professional": "Marketing Strategist"
+          },
           "archetype": "specialist",
           "expertise": [
             "marketing strategy",
@@ -605,13 +1321,37 @@
         "build"
       ],
       "questions": [
-        "Format, length, and audience?",
-        "Style references you like?"
+        {
+          "id": "format",
+          "header": "Format",
+          "question": "What are we making, and how long? (free text)"
+        },
+        {
+          "id": "audience",
+          "header": "Audience",
+          "question": "Who is it for?",
+          "options": [
+            "Just me",
+            "Friends and family",
+            "A general audience",
+            "Professionals / a client"
+          ]
+        },
+        {
+          "id": "style",
+          "header": "Style",
+          "question": "Any style references you love? (free text)"
+        }
       ],
       "specialists": [
         {
           "id": "storyteller",
-          "name": "Muse",
+          "position": "Storyteller",
+          "names": {
+            "people": "Azadeh",
+            "heroes": "Muse",
+            "professional": "Storyteller"
+          },
           "archetype": "specialist",
           "expertise": [
             "storytelling",
@@ -624,5 +1364,82 @@
         }
       ]
     }
-  }
+  },
+  "kickoff_generic": [
+    {
+      "id": "result",
+      "header": "Result",
+      "question": "What should the final result look like?",
+      "options": [
+        "A document or report",
+        "A plan or checklist",
+        "Working code or files",
+        "Just a clear recommendation"
+      ],
+      "multi": true
+    },
+    {
+      "id": "involvement",
+      "header": "Involvement",
+      "question": "How involved do you want to be while the team works?",
+      "options": [
+        "Check with me at each major step",
+        "Only ask me for big decisions",
+        "Just deliver the result"
+      ]
+    },
+    {
+      "id": "deadline",
+      "header": "Deadline",
+      "question": "When do you need it?",
+      "options": [
+        "Today",
+        "This week",
+        "This month",
+        "No rush"
+      ],
+      "answered_if": [
+        "today",
+        "tomorrow",
+        "this week",
+        "next week",
+        "deadline",
+        "by friday",
+        "asap",
+        "urgent"
+      ]
+    },
+    {
+      "id": "musts",
+      "header": "Must-haves",
+      "question": "Any must-haves, constraints, or things to avoid? (free text)"
+    }
+  ],
+  "kickoff_project_task": [
+    {
+      "id": "done",
+      "header": "Done means",
+      "question": "What does 'done' look like for this piece of work? (free text)"
+    },
+    {
+      "id": "priority",
+      "header": "Priority",
+      "question": "How should the team balance speed and polish?",
+      "options": [
+        "Fast: rough is fine",
+        "Balanced",
+        "Polished: tests and review"
+      ]
+    },
+    {
+      "id": "scope",
+      "header": "Scope",
+      "question": "Can the team change other parts of the project if needed?",
+      "options": [
+        "Yes, whatever it takes",
+        "Small related changes only",
+        "Only this feature, ask before touching anything else"
+      ]
+    }
+  ]
 }

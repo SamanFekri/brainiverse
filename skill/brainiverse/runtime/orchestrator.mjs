@@ -129,7 +129,7 @@ export function addTask(state, {
     id: taskId,
     kind,
     objective: objective.trim(),
-    agent,
+    agent: profile.id,
     inputs: [...inputs],
     expected_output,
     constraints: [...constraints],
@@ -363,7 +363,7 @@ export function reassign(state, taskId, agent) {
   if (task.status !== "pending") throw new BrainiverseError(`only pending tasks can be reassigned; ${taskId} is ${task.status}`);
   const profile = teams.findAgent(state.team, agent);
   if (!profile.enabled) throw new BrainiverseError(`${profile.name} is disabled`);
-  task.agent = agent;
+  task.agent = profile.id;
   return task;
 }
 

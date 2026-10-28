@@ -5,10 +5,12 @@
 // enter the transcript only when the agent was actually invoked for a meeting task and
 // submitted a result, so participation can never be fabricated.
 import * as orchestrator from "./orchestrator.mjs";
+import * as registry from "./registry.mjs";
 import * as teams from "./teams.mjs";
 import { BrainiverseError, nextId } from "./store.mjs";
 
 const { now } = orchestrator;
+const agentId = (state, ref) => teams.findAgent(state.team, ref).id;
 
 export function getMeeting(state, meetingId) {
   if (!(meetingId in state.meetings)) throw new BrainiverseError(`no meeting ${meetingId}`);
@@ -40,7 +42,7 @@ export function start(state, objective, participants) {
   orchestrator.requireActive(state);
   if (!objective || !objective.trim()) throw new BrainiverseError("a meeting needs an objective");
   const leader = state.team.leader;
-  const invited = [...new Set(participants)].filter((p) => p !== leader);
+  const invited = [...new Set(participants.map((p) => agentId(state, p)))].filter((p) => p !== leader);
   if (!invited.length) throw new BrainiverseError("invite at least one agent besides the leader");
   const limit = state.limits.max_meeting_participants;
   if (invited.length > limit) {
@@ -49,21 +51,21 @@ export function start(state, objective, participants) {
   }
   for (const id of invited) if (!teams.findAgent(state.team, id).enabled) throw new BrainiverseError(`${id} is disabled`);
   const meeting = newMeeting(state, { objective: objective.trim(), host: leader, participants: invited });
-  const names = invited.map((a) => teams.findAgent(state.team, a).name).join(", ");
+  const names = invited.map((a) => registry.label(teams.findAgent(state.team, a))).join(", ");
   post(meeting, leader, "system", `Meeting opened: ${meeting.objective}. Participants: ${names}.`);
   return meeting;
 }
 
 /** A one-on-one conversation between the human and a single agent, without the Leader. */
-export function startDirect(state, agentId, topic = "") {
+export function startDirect(state, ref, topic = "") {
   orchestrator.requireActive(state);
-  const profile = teams.findAgent(state.team, agentId);
+  const profile = teams.findAgent(state.team, ref);
   if (!profile.enabled) throw new BrainiverseError(`${profile.name} is disabled`);
   const meeting = newMeeting(state, {
-    mode: "direct", objective: topic.trim() || `Direct conversation with ${profile.name}`, host: "human",
-    participants: [agentId],
+    mode: "direct", objective: topic.trim() || `Direct conversation with ${registry.label(profile)}`, host: "human",
+    participants: [profile.id],
   });
-  post(meeting, "human", "system", `Direct line opened with ${profile.name}.`);
+  post(meeting, "human", "system", `Direct line opened with ${registry.label(profile)}.`);
   return meeting;
 }
 
@@ -81,16 +83,17 @@ export function directMessage(state, meetingId, text) {
 }
 
 /** Create a contribution task. The Leader then runs it like any task (start, invoke, submit). */
-export function ask(state, meetingId, agentId, prompt) {
+export function ask(state, meetingId, ref, prompt) {
   const meeting = getMeeting(state, meetingId);
+  const id = agentId(state, ref);
   requireOpen(meeting);
   if (meeting.mode === "direct") throw new BrainiverseError(`${meetingId} is a direct line; the human's messages go through \`chat say\``);
-  if (!meeting.participants.includes(agentId)) throw new BrainiverseError(`${agentId} is not in meeting ${meetingId}; add them first`);
+  if (!meeting.participants.includes(id)) throw new BrainiverseError(`${ref} is not in meeting ${meetingId}; add them first`);
   const task = orchestrator.addTask(state, {
-    objective: prompt, agent: agentId, kind: "meeting", meeting: meetingId,
+    objective: prompt, agent: id, kind: "meeting", meeting: meetingId,
     expected_output: "A contribution to the discussion in the result protocol, responding to the transcript",
   });
-  post(meeting, meeting.host, "request", `@${agentId}: ${prompt}`, { task: task.id });
+  post(meeting, meeting.host, "request", `@${registry.label(teams.findAgent(state.team, id))}: ${prompt}`, { task: task.id });
   return task;
 }
 
@@ -156,19 +159,20 @@ export function assume(state, meetingId, text) {
 }
 
 /** Convert a conclusion into a real task on the board. */
-export function action(state, meetingId, agentId, objective, { acceptance = [], depends_on = [] } = {}) {
+export function action(state, meetingId, ref, objective, { acceptance = [], depends_on = [] } = {}) {
   const meeting = getMeeting(state, meetingId);
   const task = orchestrator.addTask(state, {
-    objective, agent: agentId, acceptance, depends_on,
+    objective, agent: ref, acceptance, depends_on,
     context: `Action item from meeting ${meetingId}: ${meeting.objective}`,
   });
   meeting.actions.push(task.id);
-  post(meeting, meeting.host, "action", `${task.id} → ${agentId}: ${objective}`, { task: task.id });
+  post(meeting, meeting.host, "action", `${task.id} → ${registry.label(teams.findAgent(state.team, task.agent))}: ${objective}`, { task: task.id });
   return task;
 }
 
-export function addParticipant(state, meetingId, agentId) {
+export function addParticipant(state, meetingId, ref) {
   const meeting = getMeeting(state, meetingId);
+  const agentId = teams.findAgent(state.team, ref).id;
   requireOpen(meeting, true);
   if (meeting.mode === "direct") throw new BrainiverseError("a direct line has exactly one agent; start a meeting instead");
   if (!teams.findAgent(state.team, agentId).enabled) throw new BrainiverseError(`${agentId} is disabled`);
@@ -180,8 +184,9 @@ export function addParticipant(state, meetingId, agentId) {
   post(meeting, meeting.host, "system", `${agentId} joined.`);
 }
 
-export function removeParticipant(state, meetingId, agentId) {
+export function removeParticipant(state, meetingId, ref) {
   const meeting = getMeeting(state, meetingId);
+  const agentId = teams.findAgent(state.team, ref).id;
   if (!meeting.participants.includes(agentId)) throw new BrainiverseError(`${agentId} is not in the meeting`);
   meeting.participants = meeting.participants.filter((p) => p !== agentId);
   for (const task of Object.values(state.tasks)) {
@@ -216,7 +221,7 @@ export function setStatus(state, meetingId, status, summary = "") {
 
 export function transcript(state, meetingId, limit = 40) {
   const meeting = getMeeting(state, meetingId);
-  const names = Object.fromEntries(state.team.agents.map((a) => [a.id, a.name]));
+  const names = Object.fromEntries(state.team.agents.map((a) => [a.id, registry.label(a)]));
   names.human = "Human";
   return meeting.messages.slice(-limit)
     .map((m) => `[${m.kind}] ${names[m.from] ?? m.from}: ${m.text}`)

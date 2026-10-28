@@ -32,7 +32,7 @@ export function request(state, { kind, detail, agent = null, capability = null, 
   if (!APPROVAL_KINDS.includes(kind)) throw new BrainiverseError(`approval kind must be one of ${APPROVAL_KINDS.join(", ")}`);
   if (!detail || !detail.trim()) throw new BrainiverseError("describe what is being approved (--detail)");
   if (capability && !(capability in tools.CAPABILITIES)) throw new BrainiverseError(`unknown capability ${capability}`);
-  if (agent) teams.findAgent(state.team, agent);
+  if (agent) agent = teams.findAgent(state.team, agent).id;
   const id = nextId("A", state.approvals);
   state.approvals[id] = {
     id, kind, detail, agent, capability, task, skill, status: "pending", requested: now(), resolved: null, human_note: "",

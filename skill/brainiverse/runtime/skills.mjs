@@ -132,7 +132,7 @@ export function addCandidate(state, {
       "never record a skill that was not actually found");
   }
   if (gap && !(gap in state.skills.gaps)) throw new BrainiverseError(`no gap ${gap}`);
-  teams.findAgent(state.team, agent);
+  agent = teams.findAgent(state.team, agent).id;
   const id = nextId("S", state.skills.candidates);
   state.skills.candidates[id] = {
     id, name, source, url, local_path, purpose, agent, gap, benefits, permissions: [...permissions], compatibility,

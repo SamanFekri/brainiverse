@@ -51,45 +51,80 @@ The result: the right minds for every mission, with you still in charge.
 ## What it feels like
 
 ```text
-You      I want to plan two weeks in Japan in April, around €3,000. I love food and temples.
+You      /brainiverse plan two weeks in Japan in April. I love food and temples.
 
-Captain  Here's the squad I'd put on this:
-           🛡️ Captain     Leader            your point of contact
-           🔭 Lumen       Researcher        regions, cherry-blossom timing, advisories
-           📊 Penny       Budget analyst    real costs per option
-           🧭 Navigator   Itinerary expert  the day-by-day plan
-           🧭 Logistics   Specialist        rail passes, transfers, entry rules
-           🎯 Sentinel    Quality reviewer  checks facts and the budget before you see anything
-         One question first: relaxed pace, or pack it in?
+Captain  Love it. A few questions first so we're on the same page:
+           • Budget?            ○ Backpacker  ● Mid-range  ○ Comfort  ○ Luxury
+           • Getting around?    ☐ Own car  ☑ Trains  ☑ Planes  ☐ Buses
+           • Who's travelling?  ○ Solo  ● Couple  ○ Family  ○ Friends
+           • Pace?              ● Relaxed  ○ Balanced  ○ Packed
+         …and two more short rounds (where you like to stay, booking, the deadline).
 
-You      Relaxed. And rename Lumen to Sherlock.
+Captain  Here's what I understood: 14 days in April, mid-range, trains and planes, a couple, relaxed pace,
+         food and temples, a plan with booking links. And here's the squad I'd put on it:
+           🛡️ Captain (Leader)              your point of contact
+           🔭 Shirin (Researcher)           regions, cherry-blossom timing, advisories
+           📊 Babak (Budget Analyst)       real costs per option
+           🗺️ Olivia (Itinerary Planner)    the day-by-day plan
+           🚆 Ryan (Logistics Expert)      rail passes, transfers, entry rules
+           🎯 Parisa (Quality Reviewer)    checks facts and the budget before you see anything
+         OK to start?
 
-Captain  Done. Sherlock and Penny are working in parallel now…
+You      Go. Rename Shirin to Sherlock.
 
-         ⚔️ War Room: there are two good routes. Sherlock, Penny, you're up.
-Sherlock Kyoto-heavy gives you the temples and the best blossom odds (sources attached).
-Penny    It's also €340 cheaper if you skip one bullet-train leg.
+Captain  Done. Sherlock and Babak are working in parallel now…
+         ⚔️ War Room: two good routes. Sherlock, Babak, you're up.
+Sherlock (Researcher)      Kyoto-heavy gives you the temples and the best blossom odds (sources attached).
+Babak (Budget Analyst)    It's also €340 cheaper if you skip one bullet-train leg.
 Captain  Kyoto-heavy or Tokyo-heavy?
 
-You      Kyoto. Actually, let me ask Penny something directly.
+You      Kyoto. Babak, can we afford one ryokan night?
 
-Penny    (direct line) Sure, what do you want to know?
+Babak (Budget Analyst)    Yes: one night fits if we drop the second Shinkansen leg. Want me to price three options?
 ```
 
-Every line from Sherlock and Penny above comes from an actual agent run. Captain can't invent their
-words: the runtime only accepts a contribution if it's tied to a real invocation.
+Every line from Sherlock and Babak above comes from an actual agent run. Captain can't invent their words:
+the runtime only accepts a contribution if it's tied to a real invocation.
+
+## Just say what you want
+
+There's one way in: `/brainiverse <what you want>`, or `/brainiverse` on its own and Captain asks. You never
+have to say "make a team". Captain works out what the request needs:
+
+| You say | Brainiverse does |
+|---|---|
+| "what's the time difference with Tokyo?" | Just answers. No team for a one-liner. |
+| "plan a trip", "research this idea", "help me decide" | Builds a **quick team** for that mission. |
+| "build an app", "keep improving this project" | Builds a **project team** that stays with the project. |
+| anything, in a project that already has a team | Puts the **existing project team** to work. |
+
+**Quick team or project team?** A quick team exists for one mission and is gone afterwards, unless you save
+it. A project team is the long-lived crew of a repo: it's saved with the project, and each agent is written to
+`.claude/agents/brainiverse-<id>.md`, so Claude Code knows them and enforces their tools. When the work grows
+("time to deploy"), new agents join the project team for good.
+
+**On the same page from the start.** Before anyone works, Captain runs a kickoff interview with clickable
+questions. For a trip: budget, transport (own car, trains, planes, buses), who's travelling, pace, interests,
+stays, special needs, booking. Answers trigger follow-ups (own car → licence and parking; kids → ages), and
+Captain adds whatever your mission needs that no checklist could know. It skips anything you've already said,
+asks as many rounds as it takes, then sums it all up with the team for one OK.
+
+**Talk to anyone, any time.** Say "Babak, …" or "ask Tyler …". Your message goes straight to that agent,
+and the reply comes back word for word. Ask about their work ("why Kyoto?") or give them more to do ("also
+price three ryokans"); they remember what they did and use their own tools.
 
 ## How it works
 
 ```
  You ⇄ Captain  ── the main Claude Code session, guided by SKILL.md
           │
-          │  1. understands the mission, proposes a team, gets your OK
-          │  2. breaks the goal into tasks with owners, dependencies and acceptance criteria
-          │  3. "brainiverse task start ready" → one Agent-tool call per runnable task
+          │  1. routes the request: answer · quick team · project team
+          │  2. kickoff interview until you're on the same page, then one OK for the team
+          │  3. breaks the goal into tasks with owners, dependencies and acceptance criteria
+          │  4. "brainiverse task start ready" → one Agent-tool call per runnable task
           ▼
    ┌───────────┬───────────┬───────────┐
-   │ Sherlock  │  Penny    │ Navigator │  real subagents, running in parallel
+   │  Shirin   │  Babak   │  Olivia   │  real subagents, running in parallel
    └─────┬─────┴─────┬─────┴─────┬─────┘  each fetches its brief → works → submits a result
          ▼           ▼           ▼
    ┌─────────────────────────────────────┐
@@ -98,9 +133,9 @@ words: the runtime only accepts a contribution if it's tied to a real invocation
    └─────────────────────────────────────┘
           │
           ▼
-   4. Captain reviews each result: accept, or send it back with feedback
-   5. War rooms when a decision needs you · direct lines when you want one agent
-   6. Sentinel audits the final deliverable → Captain hands you a debrief
+   5. Captain reviews each result: accept, or send it back with feedback
+   6. War rooms when a decision needs you · "Babak, …" whenever you want one agent
+   7. Parisa audits the final deliverable → Captain hands you a debrief
 ```
 
 There are two layers:
@@ -112,6 +147,21 @@ There are two layers:
 2. **Rules, in code.** A small Node runtime holds what must not depend on the model remembering it: the task
    graph, who may do what, limits, approvals and the audit trail. The model decides *what* to do; the runtime
    makes sure it's done *honestly*.
+
+### Meet the default crew
+
+Every agent is shown as **Name (Position)**. The default names are everyday first names, a mix of Iranian and
+American names.
+
+| Leader | Researcher | Creative Thinker | Analyst | Builder |
+|---|---|---|---|---|
+| 🛡️ Captain | 🔭 Shirin | 💡 Jake | 📊 Kaveh | 🔨 Mike |
+| **Challenger** | **Specialist** | **Communicator** | **Organizer** | **Quality Reviewer** |
+| 🧐 Neda | 🧭 Emily | 📣 Dariush | 🗂️ Sarah | 🎯 Parisa |
+
+Domain specialists join when a mission needs them, for example Babak (Budget Analyst), Olivia (Itinerary Planner),
+Arash (Architect), Tyler (Coder), Jason (DevOps Engineer) and Madison (Market Researcher). Rename anyone,
+or switch themes: `heroes` for superhero-style names, `professional` for positions only.
 
 ### Teams are built for your mission
 
@@ -148,7 +198,11 @@ Builders, Discovery Crew) are optional shortcuts.
   receives the results it depends on.
 - ⚔️ **War rooms.** Agents present, respond to each other, and challenge each other's proposals. You
   decide, and the conclusions become tasks.
-- ☎️ **Direct line.** Talk one-on-one with any agent. Captain relays the replies word for word.
+- ☎️ **Talk to any agent.** "Babak, …" goes straight to Babak. Ask about earlier work or give a new
+  request; Captain relays replies word for word.
+- 🗂️ **Project teams that stay.** A long-running project keeps its crew, written to `.claude/agents/`, and
+  grows it as the work grows.
+- 🧭 **Kickoff interview.** Clickable questions and follow-ups up front, so nobody builds on a wrong guess.
 - 🧭 **Skill discovery.** When the team hits a real gap, it looks for existing skills, scans them for risky
   patterns, recommends at most three, and installs only with your approval.
 - 💾 **Memory and reuse.** Save teams and agents, export or import them as JSON, and keep project, team and
@@ -175,10 +229,12 @@ lives in `.brainiverse/` in your project, so add it to `.gitignore`.
 You'll mostly just talk to Captain, who runs these for you. They're also there if you want to drive directly:
 
 ```bash
+brainiverse intake "Build and launch a web app with user login"   # how should this be handled?
 brainiverse team propose "Build and launch a web app with user login"
-brainiverse agent rename lumen --team @mission --name Sherlock --personality "Deductive, dry-witted"
-brainiverse meeting start --objective "Pick the route" --with lumen,penny
-brainiverse chat start penny
+brainiverse project adopt build-and-launch-a-web-app-with-user-login # make it this repo's team
+brainiverse agent rename shirin --team @project --name Sherlock --personality "Deductive, dry-witted"
+brainiverse meeting start --objective "Pick the route" --with shirin,babak
+brainiverse ask babak "Can we afford one ryokan night?"
 brainiverse status
 brainiverse mission report
 ```
@@ -188,11 +244,11 @@ Full reference: [docs/cli.md](skill/brainiverse/docs/cli.md).
 ## Honest limits
 
 - Captain is your main Claude Code session, not a separate process. Subagents can't talk to you directly or
-  spawn their own agents.
-- The runtime strictly enforces its own records (approvals, limits, who may submit what). Which tools a
-  subagent actually calls during its turn is guided by its brief and Claude Code's permission prompts, not
-  sandboxed per agent yet.
-- `team propose` starts from keyword and domain matching. That makes it predictable, and Captain refines it
+  spawn their own agents, so Captain relays.
+- Project-team agents run as their own Claude Code agent types with enforced tool lists. Quick-team agents run
+  as general-purpose subagents guided by their brief. Agents added mid-session become their own types from the
+  next session.
+- `intake` and `team propose` start from keyword and domain matching. That makes it predictable, and Captain refines it
   with judgment.
 
 More in [docs/limitations.md](skill/brainiverse/docs/limitations.md), including what's planned next.
@@ -200,7 +256,7 @@ More in [docs/limitations.md](skill/brainiverse/docs/limitations.md), including 
 ## Repository layout
 
 ```
-assets/                     icon and animated banner
+assets/                     icon and animated kaveh
 bin/brainiverse.mjs         npx entry: install / uninstall / doctor (other commands go to the runtime)
 skill/brainiverse/          the skill exactly as it's installed
   SKILL.md                  Captain's playbook (always loaded)

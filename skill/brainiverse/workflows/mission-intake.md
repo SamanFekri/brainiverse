@@ -1,35 +1,46 @@
-# Mission intake
+# Mission intake and the kickoff interview
 
-Goal: understand what the human wants well enough to propose a team, without an interrogation.
+Goal: before anyone works, the human and the team agree on what "great" looks like. Asking ten good questions
+up front is cheaper than redoing a plan built on wrong guesses.
 
-## 1. Get the mission
-- Purpose unknown → *"Hey! What do you want your team to help you accomplish? Tell me your mission, and I'll
-  assemble the right crew."*
-- Purpose already stated (including in the message that triggered the skill) → don't ask again.
-- No jargon: the human doesn't need to know about agents, archetypes, or orchestration.
+## 1. Route the request
+`bv intake "<request>"` → `mode` (ask / answer / continue_project / new_project / quick_team) plus `kickoff`.
+If the purpose is unknown, ask naturally: *"Hey! What do you want your team to help you accomplish? Tell me your
+mission, and I'll assemble the right crew."* Never make the human repeat what they already said.
 
-## 2. Extract (silently, in your head)
-| Item | Example (Japan trip) |
-|---|---|
-| Primary objective | A two-week itinerary for Japan |
-| Expected outcomes | Day-by-day plan, budget, booking checklist |
-| Constraints | April, ~€3,000, vegetarian |
-| Resources | JR Pass? existing bookings? |
-| Required expertise | Destinations, budgeting, transport logistics |
-| Tools needed | Web search; no bookings without approval |
-| Risks | Cherry-blossom crowds, price spikes |
-| Success criteria | Fits budget; no more than 3 hotel changes; covers food interests |
+## 2. Run the kickoff interview
+`kickoff` gives you:
+- `rounds`: choice questions grouped for AskUserQuestion (up to 4 per call, 2-4 options each; `multi` →
+  `multiSelect: true`). The human can always pick "Other" and type.
+- `free_text`: open questions (features, must-haves, target customer…). Ask them in one short message.
+- `already_answered`: things the request already settled. Don't ask them.
+- `follow_ups` on some questions: extra questions triggered by a specific answer.
 
-## 3. Clarify only what matters
-`bv team propose` returns domain-relevant `questions`. Ask a question only if the answer changes the plan
-(dates and budget for a trip: yes; favourite colour: no). Batch them into **one** AskUserQuestion call (max 4)
-or one short message. Everything else: make a reasonable assumption and list it under "Assumptions" in the
-proposal.
+It's a **starting checklist, not a script**:
+1. Ask a round. Read the answers.
+2. Ask the follow-ups those answers trigger, e.g. for a trip:
+   - Transport "own car" → licence, automatic, tolls, parking
+   - "Planes" → direct flights, luggage
+   - Travellers "family with kids" → kids' ages
+   - Booking "with my approval" → how payment works
+3. Add questions this mission needs that no list could know. For example: "You mentioned your dog: is it
+   coming?", or "Which city do you fly from?".
+4. Drop questions that no longer apply (driving only → no rail preferences).
+5. Repeat until nothing important is unclear. There's no fixed number of rounds: a weekend trip may need one,
+   a new app several.
+
+Good kickoff topics for any mission: the result's format, deadline, budget, how involved the human wants to
+be, must-haves and things to avoid, what success looks like.
+
+## 3. Confirm the picture
+Write a compact summary, *"Here's what I understood: …"*, and put it in the same message as the team
+proposal, so one OK confirms both. If they correct something, update and continue; don't re-ask everything.
 
 ## 4. Record it
-Pass objective, success criteria, constraints, assumptions, and resources to `bv mission new` (step 3 of
-SKILL.md). Add later discoveries with `bv mission update --constraint ...`.
+- Mission facts → `bv mission new … --constraint "…" --success "…" --assumption "…"` (later:
+  `bv mission update`).
+- Durable preferences (vegetarian, prefers trains, TypeScript only) → `bv memory add "…" --scope project`
+  or `--scope team:<id>` for a project team.
 
 ## Small requests
-If the request is simple enough to answer directly ("what's the capital of Japan?"), answer it and offer the
-team only if a bigger mission is lurking. Don't spin up a squad for a one-liner.
+A request simple enough to answer directly gets an answer, not an interview.

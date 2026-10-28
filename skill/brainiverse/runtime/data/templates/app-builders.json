@@ -3,15 +3,123 @@
   "name": "App Builders",
   "description": "Builds software: requirements, design, implementation, testing, review, deployment.",
   "doc": "teams/app-builders.md",
-  "leader": "captain",
+  "leader": "leader",
   "agents": [
-    {"id": "captain", "archetype": "leader", "name": "Captain", "description": "Leads the project."},
-    {"id": "architect", "archetype": "specialist", "name": "Architect", "description": "Designs the architecture.", "expertise": ["system design", "architecture", "technology selection"]},
-    {"id": "coder", "archetype": "executor", "name": "Coder", "description": "Implements features.", "expertise": ["implementation", "refactoring"]},
-    {"id": "detective", "archetype": "analyst", "name": "Detective", "description": "Investigates bugs.", "expertise": ["debugging", "root-cause analysis"], "personality": "Methodical, patient, relentless", "capabilities": ["file_read", "code_exec"]},
-    {"id": "designer", "archetype": "creative_thinker", "name": "Designer", "description": "User experience specialist.", "expertise": ["UX", "interaction design", "accessibility"], "capabilities": ["file_read", "file_write"]},
-    {"id": "guardian", "archetype": "quality_reviewer", "name": "Guardian", "description": "Quality and security reviewer.", "expertise": ["code review", "application security", "testing"]},
-    {"id": "devops", "archetype": "executor", "name": "DevOps Engineer", "description": "Infrastructure specialist.", "expertise": ["CI/CD", "infrastructure", "deployment"], "enabled": false}
+    {
+      "id": "leader",
+      "archetype": "leader",
+      "position": "Leader",
+      "names": {
+        "people": "Captain",
+        "heroes": "Captain",
+        "professional": "Leader"
+      },
+      "description": "Leads the project."
+    },
+    {
+      "id": "architect",
+      "archetype": "specialist",
+      "position": "Architect",
+      "names": {
+        "people": "Arash",
+        "heroes": "Architect",
+        "professional": "Architect"
+      },
+      "description": "Designs the architecture.",
+      "expertise": [
+        "system design",
+        "architecture",
+        "technology selection"
+      ]
+    },
+    {
+      "id": "coder",
+      "archetype": "executor",
+      "position": "Coder",
+      "names": {
+        "people": "Tyler",
+        "heroes": "Coder",
+        "professional": "Coder"
+      },
+      "description": "Implements features.",
+      "expertise": [
+        "implementation",
+        "refactoring"
+      ]
+    },
+    {
+      "id": "debugger",
+      "archetype": "analyst",
+      "position": "Debugger",
+      "names": {
+        "people": "Grace",
+        "heroes": "Detective",
+        "professional": "Debugger"
+      },
+      "description": "Investigates bugs.",
+      "expertise": [
+        "debugging",
+        "root-cause analysis"
+      ],
+      "personality": "Methodical, patient, relentless",
+      "capabilities": [
+        "file_read",
+        "code_exec"
+      ]
+    },
+    {
+      "id": "designer",
+      "archetype": "creative_thinker",
+      "position": "Designer",
+      "names": {
+        "people": "Yasmin",
+        "heroes": "Designer",
+        "professional": "Designer"
+      },
+      "description": "User experience specialist.",
+      "expertise": [
+        "UX",
+        "interaction design",
+        "accessibility"
+      ],
+      "capabilities": [
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "reviewer",
+      "archetype": "quality_reviewer",
+      "position": "Quality & Security Reviewer",
+      "names": {
+        "people": "Parisa",
+        "heroes": "Guardian",
+        "professional": "Quality & Security Reviewer"
+      },
+      "description": "Quality and security reviewer.",
+      "expertise": [
+        "code review",
+        "application security",
+        "testing"
+      ]
+    },
+    {
+      "id": "devops",
+      "archetype": "executor",
+      "position": "DevOps Engineer",
+      "names": {
+        "people": "Jason",
+        "heroes": "DevOps",
+        "professional": "DevOps Engineer"
+      },
+      "description": "Infrastructure specialist.",
+      "expertise": [
+        "CI/CD",
+        "infrastructure",
+        "deployment"
+      ],
+      "enabled": false
+    }
   ],
   "workflow": [
     "Clarify requirements",

@@ -17,46 +17,46 @@ function startReady(home) {
 test("travel: propose → customize → parallel research → meeting → itinerary → review → report", () => {
   const home = path.join(tmpdir(), ".brainiverse");
   const proposal = cli(home, ["team", "propose", "Plan a two-week trip to Japan in April on a budget of 3000 euros", "--id", "japan"]).json;
-  assert.ok(proposal.roster.find((r) => r.id === "navigator").why);
-  cli(home, ["agent", "rename", "lumen", "--team", "japan", "--name", "Sherlock"]);
+  assert.ok(proposal.roster.find((r) => r.id === "itinerary-planner").why);
+  cli(home, ["agent", "rename", "researcher", "--team", "japan", "--name", "Sherlock"]);
   cli(home, ["team", "approve", "japan"]);
   cli(home, ["mission", "new", "--team", "japan", "--goal", "14-day Japan itinerary", "--success", "Within budget", "--constraint", "Vegetarian"]);
 
-  cli(home, ["task", "add", "--agent", "lumen", "--objective", "Shortlist regions", "--accept", "2+ sources per region"]);
-  cli(home, ["task", "add", "--agent", "penny", "--objective", "Daily costs per region"]);
+  cli(home, ["task", "add", "--agent", "researcher", "--objective", "Shortlist regions", "--accept", "2+ sources per region"]);
+  cli(home, ["task", "add", "--agent", "budget-analyst", "--objective", "Daily costs per region"]);
   const wave = startReady(home);
-  assert.deepEqual(wave.map((s) => s.agent), ["lumen", "penny"], "independent tasks start together");
-  const brief = runAgent(home, "T1", "lumen", ok(["Tokyo", "Kyoto", "Osaka"], { evidence: ["https://www.japan.travel"] }));
+  assert.deepEqual(wave.map((s) => s.agent), ["researcher", "budget-analyst"], "independent tasks start together");
+  const brief = runAgent(home, "T1", "researcher", ok(["Tokyo", "Kyoto", "Osaka"], { evidence: ["https://www.japan.travel"] }));
   assert.match(brief, /Sherlock/, "renamed identity flows into the brief");
   assert.match(brief, /Vegetarian/, "mission constraints flow into the brief");
-  runAgent(home, "T2", "penny", ok("Tokyo €180/day, Kyoto €150/day", { assumptions: ["mid-range hotels"] }));
+  runAgent(home, "T2", "budget-analyst", ok("Tokyo €180/day, Kyoto €150/day", { assumptions: ["mid-range hotels"] }));
   assert.match(cli(home, ["task", "accept", "T1"]).err, /evidence/);
   cli(home, ["task", "accept", "T1", "--evidence", "two sources each"]);
   cli(home, ["task", "accept", "T2"]);
 
-  const meeting = cli(home, ["meeting", "start", "--objective", "Pick the route", "--with", "lumen,penny"]).json.meeting;
-  cli(home, ["meeting", "ask", meeting, "--agent", "lumen,penny", "--prompt", "Which route?"]);
+  const meeting = cli(home, ["meeting", "start", "--objective", "Pick the route", "--with", "researcher,budget-analyst"]).json.meeting;
+  cli(home, ["meeting", "ask", meeting, "--agent", "researcher,budget-analyst", "--prompt", "Which route?"]);
   const round = startReady(home);
   for (const s of round) runAgent(home, s.task, s.agent, ok(`${s.agent} prefers Kyoto-heavy`));
   const q = cli(home, ["meeting", "question", meeting, "Kyoto-heavy or Tokyo-heavy?"]).json;
   cli(home, ["meeting", "human", meeting, "Kyoto-heavy", "--answers", q.id]);
   cli(home, ["meeting", "decide", meeting, "Tokyo 4 / Kyoto 6 / Osaka 4", "--human-approved"]);
-  const action = cli(home, ["meeting", "action", meeting, "--agent", "navigator", "--objective", "Day-by-day itinerary", "--accept", "fits budget"]).json.task;
+  const action = cli(home, ["meeting", "action", meeting, "--agent", "itinerary-planner", "--objective", "Day-by-day itinerary", "--accept", "fits budget"]).json.task;
   cli(home, ["meeting", "end", meeting, "--summary", "Route chosen"]);
   const transcript = cli(home, ["meeting", "show", meeting]).json.transcript;
-  assert.match(transcript, /Sherlock: lumen prefers Kyoto-heavy/);
+  assert.match(transcript, /Sherlock \(Researcher\): researcher prefers Kyoto-heavy/);
   assert.match(transcript, /Human: Kyoto-heavy/);
 
   startReady(home);
-  const itineraryBrief = runAgent(home, action, "navigator", ok(["Day 1: Tokyo", "Day 14: Osaka"], { deliverables: [{ path: "itinerary.md", description: "plan" }] }));
+  const itineraryBrief = runAgent(home, action, "itinerary-planner", ok(["Day 1: Tokyo", "Day 14: Osaka"], { deliverables: [{ path: "itinerary.md", description: "plan" }] }));
   assert.match(itineraryBrief, /Action item from meeting/);
   cli(home, ["task", "accept", action, "--evidence", "total €2,700 < €3,000"]);
-  const review = cli(home, ["task", "add", "--agent", "sentinel", "--objective", "Audit itinerary", "--after", action]).json.task;
+  const review = cli(home, ["task", "add", "--agent", "reviewer", "--objective", "Audit itinerary", "--after", action]).json.task;
   startReady(home);
-  const reviewBrief = runAgent(home, review, "sentinel", ok("pass: within budget, sources valid"));
+  const reviewBrief = runAgent(home, review, "reviewer", ok("pass: within budget, sources valid"));
   assert.match(reviewBrief, /Day 1: Tokyo/, "upstream results are shared with dependents");
   cli(home, ["task", "accept", review]);
-  cli(home, ["review", action, "--verdict", "pass", "--evidence", "budget recomputed", "--reviewer", "sentinel"]);
+  cli(home, ["review", action, "--verdict", "pass", "--evidence", "budget recomputed", "--reviewer", "reviewer"]);
 
   const synthesis = path.join(tmpdir(), "synthesis.md");
   fs.writeFileSync(synthesis, "Kyoto-heavy 14-day plan within budget.");
@@ -85,7 +85,7 @@ test("software: template → implement → failing review → revise → gated d
   const bad = cli(home, ["task", "submit", "T2"], { agent: "coder", input: JSON.stringify(ok("done", { actions: [{ action: "ran tests", verified: true }] })) });
   assert.match(bad.err, /no evidence/);
   runAgent(home, "T2", "coder", ok("auth implemented", { actions: [{ action: "ran tests", verified: true, evidence: "3 passed" }] }));
-  cli(home, ["task", "add", "--agent", "guardian", "--objective", "Review auth", "--after", "T2"]);
+  cli(home, ["task", "add", "--agent", "reviewer", "--objective", "Review auth", "--after", "T2"]);
   // T3 can't start until T2 is accepted
   assert.match(cli(home, ["task", "start", "T3"]).err, /waiting on dependencies/);
   assert.match(cli(home, ["review", "T2", "--verdict", "fail", "--evidence", "ran tests"]).err, /issues/);
@@ -121,10 +121,10 @@ test("research: fan-out → synthesis → challenge → skill discovery → audi
   const home = path.join(tmpdir(), ".brainiverse");
   cli(home, ["team", "from-template", "discovery-crew", "--id", "idea"]);
   cli(home, ["mission", "new", "--team", "idea", "--goal", "Is a plant subscription worth pursuing?"]);
-  cli(home, ["task", "add", "--agent", "sherlock", "--objective", "Market"]);
-  cli(home, ["task", "add", "--agent", "lumen", "--objective", "Trends"]);
-  cli(home, ["task", "add", "--agent", "spark", "--objective", "Concepts", "--after", "T1,T2"]);
-  cli(home, ["task", "add", "--agent", "skeptic", "--objective", "Challenge", "--after", "T3"]);
+  cli(home, ["task", "add", "--agent", "market-researcher", "--objective", "Market"]);
+  cli(home, ["task", "add", "--agent", "trend-explorer", "--objective", "Trends"]);
+  cli(home, ["task", "add", "--agent", "creative", "--objective", "Concepts", "--after", "T1,T2"]);
+  cli(home, ["task", "add", "--agent", "challenger", "--objective", "Challenge", "--after", "T3"]);
   for (const [ids, findings] of [[["T1", "T2"], "growing market"], [["T3"], "3 concepts"], [["T4"], "churn risk"]]) {
     const started = startReady(home).map((s) => s.task);
     assert.deepEqual(started, ids);
@@ -138,8 +138,8 @@ test("research: fan-out → synthesis → challenge → skill discovery → audi
   fs.mkdirSync(skillDir);
   fs.writeFileSync(path.join(skillDir, "SKILL.md"), "---\nname: deck\ndescription: makes slide decks\n---\nMake slides.\n");
   cli(home, ["skill", "gap", "slides", "need a deck"]);
-  assert.match(cli(home, ["skill", "candidate", "--name", "invented", "--source", "?", "--purpose", "x", "--agent", "spark"]).err, /actually found/);
-  cli(home, ["skill", "candidate", "--name", "deck", "--source", "github", "--url", "https://github.com/example/deck", "--purpose", "slides", "--agent", "spark", "--gap", "G1"]);
+  assert.match(cli(home, ["skill", "candidate", "--name", "invented", "--source", "?", "--purpose", "x", "--agent", "creative"]).err, /actually found/);
+  cli(home, ["skill", "candidate", "--name", "deck", "--source", "github", "--url", "https://github.com/example/deck", "--purpose", "slides", "--agent", "creative", "--gap", "G1"]);
   assert.equal(cli(home, ["skill", "scan", skillDir, "--candidate", "S1"]).json.risk, "low");
   assert.equal(cli(home, ["skill", "recommend"]).json.length, 1);
   assert.match(cli(home, ["skill", "verify", "S1", "--path", skillDir]).err, /approved/);
@@ -147,11 +147,11 @@ test("research: fan-out → synthesis → challenge → skill discovery → audi
   cli(home, ["approval", "resolve", a, "approve", "--note", "User: yes"]);
   cli(home, ["skill", "approve", "S1", "--approval", a]);
   assert.equal(cli(home, ["skill", "verify", "S1", "--path", skillDir]).json.status, "integrated");
-  assert.ok(cli(home, ["agent", "show", "spark", "--team", "@mission"]).json.skills.includes("deck"));
+  assert.ok(cli(home, ["agent", "show", "creative", "--team", "@mission"]).json.skills.includes("deck"));
 
-  cli(home, ["task", "add", "--agent", "auditor", "--objective", "Audit recommendation", "--after", "T4"]);
+  cli(home, ["task", "add", "--agent", "reviewer", "--objective", "Audit recommendation", "--after", "T4"]);
   startReady(home);
-  assert.match(runAgent(home, "T5", "auditor", ok("sources valid")), /churn risk/);
+  assert.match(runAgent(home, "T5", "reviewer", ok("sources valid")), /churn risk/);
   const report = cli(home, ["mission", "report"]).out;
   assert.match(report, /Skills integrated[\s\S]*deck/);
   assert.equal(cli(home, ["metrics"]).json.completion_rate, 0.8);

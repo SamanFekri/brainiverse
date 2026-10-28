@@ -6,10 +6,14 @@
   session uses, not the process.
 - **Permissions are enforced at two levels, with different strength.** The runtime strictly enforces
   everything recorded in it: capability grants, approvals, limits, who may submit what, and the agent-only
-  command allowlist. Which tools a subagent actually calls during its turn is constrained by its brief and by
-  Claude Code's own permission prompts, but `general-purpose` subagents technically have the full tool set.
-  For hard per-agent tool restriction, define agents as Claude Code subagent files
-  (`.claude/agents/*.md` with a `tools:` list); see "future improvements".
+  command allowlist. **Project-team** agents run as their own Claude Code subagent types
+  (`.claude/agents/brainiverse-<id>.md` with a `tools:` list), so Claude Code enforces their tools. **Quick-team**
+  agents run as `general-purpose` subagents: their brief and Claude Code's permission prompts constrain them,
+  but they technically have the full tool set.
+- **New project agents load next session.** Claude Code reads `.claude/agents/` at startup, so agents added
+  during a session run as `general-purpose` (with their brief) until Claude Code restarts.
+- **Agents without Bash need the Leader to file their results.** Their brief is inlined and they return JSON
+  that the Leader submits; agents with Bash fetch and submit on their own.
 - **`BRAINIVERSE_AGENT` is a convention, not authentication.** It stops well-behaved agents from running
   Leader commands by mistake or under prompt injection; it can't stop a process that deliberately omits it.
   Human approvals are recorded with the human's quoted answer and audited, but they're entered through the
@@ -17,7 +21,7 @@
 - **Timeouts are bookkeeping.** `task sweep` marks overdue tasks failed; stopping a running subagent needs
   Claude Code's TaskStop.
 - **Token budgets are opt-in.** The runtime counts tokens only when `--tokens` is passed on submit.
-- **Team proposals start from keywords.** `team propose` uses deterministic keyword/domain matching so it's
+- **Team proposals and intake start from keywords.** `team propose` and `intake` use deterministic keyword/domain matching so they're
   predictable and testable; the Leader is expected to refine the roster with judgment.
 - **Skill discovery depends on the environment.** Searching needs web or `npx skills` access; installing
   needs Bash permission. The static scan is a heuristic, not a security guarantee. New skills generally load
@@ -28,8 +32,6 @@
   multi-user authentication.
 
 ## Future improvements
-- `bv team export-claude-agents`: write `.claude/agents/<id>.md` subagent files with `tools:` derived from
-  capabilities, for hard tool restriction per agent.
 - A hook (`PreToolUse`) that checks subagent tool calls against their recorded capabilities.
 - LLM-assisted capability mapping as an option next to the keyword analyzer.
 - More templates (Learning Lab, Launch Team, Life Ops) and more domains.

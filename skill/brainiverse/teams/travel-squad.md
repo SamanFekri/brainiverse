@@ -1,26 +1,26 @@
 # Travel Squad
 
-`bv team from-template travel-squad [--id <name>]`
+`brainiverse team from-template travel-squad [--id <name>]`
 
-| Agent | Archetype | Focus |
-|---|---|---|
-| Captain | Leader | Leads the mission and talks to you |
-| Lumen | Researcher | Destinations, seasonality, advisories |
-| Scout | Researcher | Local experiences, food, hidden gems |
-| Penny | Analyst | Budget and cost comparisons |
-| Navigator | Specialist | Day-by-day itinerary, routing, pacing |
-| Logistics Expert | Specialist | Transport, visas, bookings, practical constraints |
-| Sentinel | Quality Reviewer | Risks and fact checks |
+Plans trips: research, budget, itinerary, logistics, and a risk check.
+
+| Agent (default names) | heroes theme | id | Role |
+|---|---|---|---|
+| Captain (Leader) | Captain | `leader` | Leads the mission and communicates with the human. |
+| Shirin (Researcher) | Lumen | `researcher` | Researches destinations and travel information. |
+| Laleh (Local Explorer) | Scout | `local-explorer` | Finds local experiences and hidden attractions. |
+| Babak (Budget Analyst) | Penny | `budget-analyst` | Analyzes the budget. |
+| Olivia (Itinerary Planner) | Navigator | `itinerary-planner` | Creates the itinerary. |
+| Ryan (Logistics Expert) | Logistics | `logistics` | Checks transport and practical constraints. |
+| Parisa (Quality Reviewer) | Sentinel | `reviewer` | Reviews risks and verifies important details. |
 
 ## Workflow
-1. **Preferences** — dates, budget, interests, pace, travellers, accessibility. Ask only what's missing.
-2. **Research in parallel** — Lumen (regions, timing) and Scout (experiences).
-3. **Compare** — Penny estimates costs per option (low/expected/high).
-4. **Meeting (optional)** — if the options trade off sharply, a war room with Lumen, Scout, and Penny.
-5. **Itinerary** — Navigator, `--after` research and budget.
-6. **Logistics** — passes, transfers, entry rules, booking deadlines.
-7. **Review** — Sentinel checks facts, opening seasons, budget arithmetic, and risks.
-8. **Present** — itinerary, budget, booking checklist, open questions.
+1. Understand preferences (dates, budget, interests, style)
+2. Research destinations and local experiences in parallel
+3. Compare options and budget
+4. Plan the itinerary
+5. Validate logistics
+6. Review risks and facts
+7. Present the result for human review
 
-Bookings and payments are **never** made without the `spend_money` capability and an explicit approval for
-that specific purchase. By default the team produces a plan and a booking checklist.
+Bookings and payments are **never** made without the `spend_money` capability and an explicit approval for that specific purchase. By default the team produces a plan and a booking checklist.

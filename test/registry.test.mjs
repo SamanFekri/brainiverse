@@ -14,10 +14,15 @@ test("all ten archetypes exist and produce valid agents", () => {
   }
 });
 
-test("themes give agents names and personalities", () => {
-  assert.equal(registry.makeAgent("researcher").name, "Lumen");
-  assert.equal(registry.makeAgent("researcher", { theme: "classic" }).name, "Vision");
-  assert.equal(registry.makeAgent("researcher", { theme: "professional" }).name, "Researcher");
+test("themes give agents names; labels show Name (Position)", () => {
+  const shirin = registry.makeAgent("researcher");
+  assert.equal(shirin.name, "Shirin");
+  assert.equal(shirin.id, "researcher", "ids are stable role ids, not theme names");
+  assert.equal(registry.label(shirin), "Shirin (Researcher)");
+  assert.equal(registry.makeAgent("researcher", { theme: "heroes" }).name, "Lumen");
+  const plain = registry.makeAgent("researcher", { theme: "professional" });
+  assert.equal(registry.label(plain), "Researcher", "no repeated position when the name is the position");
+  assert.equal(registry.label(registry.makeAgent("analyst", { id: "budget", names: { people: "Babak" }, position: "Budget Analyst" })), "Babak (Budget Analyst)");
 });
 
 test("renaming never changes responsibilities or permissions", () => {

@@ -1,22 +1,25 @@
 # Discovery Crew
 
-`bv team from-template discovery-crew [--id <name>]`
+`brainiverse team from-template discovery-crew [--id <name>]`
 
-| Agent | Archetype | Focus |
-|---|---|---|
-| Captain | Leader | Leads the investigation |
-| Sherlock | Researcher | Market and competitor research |
-| Lumen | Researcher | Trends and emerging opportunities |
-| Brain | Analyst | Evidence, financial assumptions, unit economics |
-| Spark | Creative Thinker | Alternative concepts and pivots |
-| Skeptic | Challenger | Stress-tests the thesis |
-| Auditor | Quality Reviewer | Audits the final recommendation |
+Investigates open questions and business ideas, then recommends a course of action.
+
+| Agent (default names) | heroes theme | id | Role |
+|---|---|---|---|
+| Captain (Leader) | Captain | `leader` | Leads the investigation. |
+| Madison (Market Researcher) | Sherlock | `market-researcher` | Researches the market. |
+| Lauren (Trend Explorer) | Lumen | `trend-explorer` | Identifies trends and opportunities. |
+| Reza (Financial Analyst) | Brain | `financial-analyst` | Analyzes evidence and financial assumptions. |
+| Jake (Creative Thinker) | Spark | `creative` | Generates alternative concepts. |
+| Neda (Challenger) | Skeptic | `challenger` | Challenges the thesis. |
+| Parisa (Quality Reviewer) | Auditor | `reviewer` | Reviews the final recommendation. |
 
 ## Workflow
-1. **Frame** — the question, the decision it informs, and what "worth pursuing" means to the human.
-2. **Investigate in parallel** — Sherlock (market) and Lumen (trends).
-3. **Generate** — Spark proposes alternatives informed by the research.
-4. **Analyze** — Brain models the leading options with explicit assumptions.
-5. **Challenge** — Skeptic attacks the leading thesis; revise or note the risks.
-6. **Discuss uncertainty** — a war room with the human on the remaining unknowns.
-7. **Recommend and audit** — Captain synthesizes; Auditor checks sources and logic before delivery.
+1. Investigate the question
+2. Generate possibilities
+3. Analyze evidence
+4. Challenge assumptions
+5. Discuss uncertainty with the human
+6. Produce and audit recommendations
+
+Usually a **quick team**: one investigation, one recommendation.

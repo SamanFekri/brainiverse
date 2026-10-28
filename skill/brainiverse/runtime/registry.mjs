@@ -7,6 +7,7 @@ export const SCHEMA_VERSION = 1;
 // Identity is deliberately separate from role and permissions: renaming "Lumen" to
 // "Sherlock" must never change what the agent does or may touch.
 export const IDENTITY_FIELDS = ["name", "personality", "communication_style", "avatar"];
+export const DEFAULT_THEME = "people";
 export const LIST_FIELDS = ["responsibilities", "expertise", "decision_rules", "skills"];
 const PROTECTED_FIELDS = ["id", "archetype", "capabilities", "schema_version"];
 
@@ -15,7 +16,7 @@ const DEFAULT_OUTPUT_FORMAT =
   "Brainiverse result protocol (JSON): status, findings, evidence, assumptions, uncertainty, recommendations, blockers, next_steps";
 
 export const PROFILE_FIELDS = [
-  "schema_version", "id", "name", "archetype", "description", "responsibilities", "personality",
+  "schema_version", "id", "name", "position", "archetype", "description", "responsibilities", "personality",
   "communication_style", "instructions", "expertise", "capabilities", "skills", "model",
   "input_format", "output_format", "decision_rules", "collaboration", "memory", "limits",
   "avatar", "enabled", "role_file",
@@ -32,26 +33,47 @@ export function terminology(style) {
   return table[style];
 }
 
-export function identityFor(archetype, theme = "heroes") {
+export function identityFor(archetype, theme = DEFAULT_THEME) {
   const all = themes();
   if (!(theme in all)) throw new BrainiverseError(`unknown theme ${theme}; choose from ${Object.keys(all)}`);
   return all[theme].identities[archetype] || {};
 }
 
+/** "Name (Position)", or just the name when the two are the same. */
+export function label(profile) {
+  const position = profile.position || archetypes()[profile.archetype]?.position;
+  return position && position.toLowerCase() !== profile.name.toLowerCase() ? `${profile.name} (${position})` : profile.name;
+}
+
+/** The next name from the theme's pool that nobody on the team uses yet (case-insensitive). */
+export function unusedName(theme, taken) {
+  const used = new Set([...taken].map((n) => n.toLowerCase()));
+  const pool = themes()[theme]?.extra_names || [];
+  return pool.find((n) => !used.has(n.toLowerCase())) || null;
+}
+
+/** Pick a name for the active theme from a { theme: name } map, falling back sensibly. */
+export function themedName(names, theme = DEFAULT_THEME) {
+  if (!names) return undefined;
+  return names[theme] || names.heroes || Object.values(names)[0];
+}
+
 /** Build a complete, valid profile from an archetype plus overrides. */
-export function makeAgent(archetype, { id, theme = "heroes", ...overrides } = {}) {
+export function makeAgent(archetype, { id, theme = DEFAULT_THEME, ...overrides } = {}) {
   const catalog = archetypes();
   if (!(archetype in catalog)) {
     throw new BrainiverseError(`unknown archetype ${archetype}; choose from ${Object.keys(catalog).join(", ")}`);
   }
   const base = catalog[archetype];
   const identity = identityFor(archetype, theme);
-  const name = overrides.name || identity.name || base.title;
+  const name = overrides.name || themedName(overrides.names, theme) || identity.name || base.position;
   delete overrides.name;
+  delete overrides.names;
   const profile = {
     schema_version: SCHEMA_VERSION,
-    id: id || slugify(name),
+    id: id || base.default_id || slugify(name),
     name,
+    position: base.position,
     archetype,
     description: base.purpose,
     responsibilities: [...base.responsibilities],

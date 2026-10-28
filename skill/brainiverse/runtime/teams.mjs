@@ -69,7 +69,44 @@ export function analyzeMission(text) {
   return { domains, capabilities, complexity, assumptions };
 }
 
-export function proposeTeam(missionText, { theme = "heroes", maxAgents, teamId } = {}) {
+const MAX_PER_ROUND = 4; // AskUserQuestion takes up to 4 questions per call
+
+/**
+ * The kickoff interview: everything worth agreeing on before work starts. Questions the request
+ * already answers are dropped; choice questions come in rounds of 4, free-text ones separately.
+ */
+export function kickoffQuestions(text, { mode = "quick_team", domains } = {}) {
+  const data = loadData("domains.json");
+  const lowered = (text || "").toLowerCase();
+  const doms = domains ?? (lowered.trim() ? analyzeMission(text).domains : []);
+  const pool = mode === "continue_project"
+    ? [...data.kickoff_project_task]
+    : [...doms.flatMap((d) => data.domains[d].questions || []), ...data.kickoff_generic];
+  const seen = new Set();
+  const ask = [];
+  const answered = [];
+  for (const { answered_if: hints, ...question } of pool) {
+    if (seen.has(question.id)) continue;
+    seen.add(question.id);
+    if (hints && hints.some((w) => matches(lowered, w))) answered.push(question.id);
+    else ask.push(question);
+  }
+  const choice = ask.filter((q) => q.options);
+  const rounds = [];
+  for (let i = 0; i < choice.length; i += MAX_PER_ROUND) rounds.push(choice.slice(i, i + MAX_PER_ROUND));
+  return {
+    rounds,
+    free_text: ask.filter((q) => !q.options),
+    already_answered: answered,
+    how: "A starting checklist, not a script. Ask the rounds with AskUserQuestion (header, question, options; " +
+      "multiSelect when multi) and the free-text questions in a short message. After each round, ask the follow_ups " +
+      "triggered by the chosen options, add your own questions this particular mission needs, and drop ones that no " +
+      "longer apply. Keep going, in as many rounds as it takes, until nothing important is unclear. Skip anything the " +
+      "human already told you. Then summarize everything you understood and get one OK together with the team.",
+  };
+}
+
+export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAgents, teamId } = {}) {
   const analysis = analyzeMission(missionText);
   const domainsData = loadData("domains.json").domains;
   const lowered = missionText.toLowerCase();
@@ -78,6 +115,10 @@ export function proposeTeam(missionText, { theme = "heroes", maxAgents, teamId }
   const usedIds = new Set();
 
   const add = (tag, profile, reason) => {
+    const taken = members.map((m) => m.profile.name);
+    if (taken.some((n) => n.toLowerCase() === profile.name.toLowerCase())) {
+      profile.name = registry.unusedName(theme, taken) || profile.name;
+    }
     const base = profile.id;
     for (let n = 2; usedIds.has(profile.id); n++) profile.id = `${base}-${n}`;
     usedIds.add(profile.id);
@@ -88,14 +129,13 @@ export function proposeTeam(missionText, { theme = "heroes", maxAgents, teamId }
     "Leads the mission, plans and delegates, and is your single point of contact.");
   covered.add("coordination");
 
-  const questions = [];
   for (const domainId of analysis.domains) {
     const domain = domainsData[domainId];
-    questions.push(...(domain.questions || []));
     for (const spec of domain.specialists) {
       if (spec.when && !spec.when.some((w) => matches(lowered, w))) continue;
       const profile = registry.makeAgent(spec.archetype, {
-        id: spec.id, theme, name: spec.name, description: spec.description, expertise: spec.expertise || [],
+        id: spec.id, theme, names: spec.names, position: spec.position, description: spec.description,
+        expertise: spec.expertise || [],
       });
       add("domain", profile, `${domain.label} specialist: ${spec.description.replace(/\.$/, "").toLowerCase()}.`);
       for (const cap of spec.covers || []) covered.add(cap);
@@ -139,7 +179,7 @@ export function proposeTeam(missionText, { theme = "heroes", maxAgents, teamId }
     team,
     reasons: Object.fromEntries(chosen.map((m) => [m.profile.id, m.reason])),
     optional: optional.map((m) => ({ id: m.profile.id, name: m.profile.name, archetype: m.profile.archetype, reason: m.reason })),
-    questions,
+    kickoff: kickoffQuestions(missionText, { domains: analysis.domains }),
     assumptions: analysis.assumptions,
   };
 }
@@ -156,7 +196,7 @@ export function loadTemplate(templateId) {
   return data;
 }
 
-export function teamFromTemplate(templateId, { teamId, theme = "heroes" } = {}) {
+export function teamFromTemplate(templateId, { teamId, theme = registry.DEFAULT_THEME } = {}) {
   const template = loadTemplate(templateId);
   const agents = template.agents.map(({ id, archetype, ...fields }) => registry.makeAgent(archetype, { id, theme, ...fields }));
   return validateTeam({
@@ -190,10 +230,14 @@ export function validateTeam(team) {
   return team;
 }
 
-export function findAgent(team, agentId) {
-  const agent = team.agents.find((a) => a.id === agentId);
+/** Find an agent by id or by name ("rocket", "Rocket", "spider-man", "Spider-Man"). */
+export function findAgent(team, ref) {
+  const want = String(ref ?? "").trim().toLowerCase();
+  const agent = team.agents.find((a) => a.id === ref) ||
+    team.agents.find((a) => a.name.toLowerCase() === want || slugify(a.name) === want);
   if (!agent) {
-    throw new BrainiverseError(`no agent ${JSON.stringify(agentId)} on team ${team.id}; members: ${team.agents.map((a) => a.id).join(", ")}`);
+    throw new BrainiverseError(`no agent ${JSON.stringify(ref)} on team ${team.id}; members: ` +
+      team.agents.map((a) => `${a.id} = ${registry.label(a)}`).join(", "));
   }
   return agent;
 }
@@ -205,8 +249,8 @@ export function redundancyWarnings(team) {
   for (const agent of team.agents) {
     if (!agent.enabled) continue;
     const key = `${agent.archetype}|${[...(agent.expertise || [])].sort().join(",")}`;
-    if (seen.has(key)) warnings.push(`${agent.name} duplicates ${seen.get(key)} (${agent.archetype}, same expertise)`);
-    else seen.set(key, agent.name);
+    if (seen.has(key)) warnings.push(`${registry.label(agent)} duplicates ${seen.get(key)} (${agent.archetype}, same expertise)`);
+    else seen.set(key, registry.label(agent));
   }
   return warnings;
 }
@@ -218,9 +262,9 @@ export function addAgent(team, profile) {
   return validateTeam(updated);
 }
 
-export function removeAgent(team, agentId) {
+export function removeAgent(team, ref) {
+  const agentId = findAgent(team, ref).id;
   if (agentId === team.leader) throw new BrainiverseError("cannot remove the leader; choose another leader first");
-  findAgent(team, agentId);
   const updated = structuredClone(team);
   updated.agents = updated.agents.filter((a) => a.id !== agentId);
   return validateTeam(updated);
@@ -233,9 +277,8 @@ export function replaceAgent(team, profile) {
   return validateTeam(updated);
 }
 
-export function setLeader(team, agentId) {
-  findAgent(team, agentId);
-  return validateTeam({ ...structuredClone(team), leader: agentId });
+export function setLeader(team, ref) {
+  return validateTeam({ ...structuredClone(team), leader: findAgent(team, ref).id });
 }
 
 export function sanitizeImport(data) {
@@ -255,7 +298,7 @@ export function sanitizeImport(data) {
     name: String(data.name || data.id),
     description: String(data.description || ""),
     leader: data.leader,
-    theme: data.theme || "heroes",
+    theme: data.theme || registry.DEFAULT_THEME,
     agents,
     workflow: (data.workflow || []).map(String),
     source: "import",

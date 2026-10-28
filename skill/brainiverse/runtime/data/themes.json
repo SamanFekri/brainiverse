@@ -1,50 +1,188 @@
 {
-  "heroes": {
-    "description": "Default: original superhero-style crew names, safe to share publicly.",
+  "people": {
+    "description": "Default: everyday first names, mostly American with Iranian names mixed in.",
     "terminology": "themed",
     "identities": {
-      "leader": {"name": "Captain", "personality": "Confident, strategic, decisive", "avatar": "🛡️"},
-      "researcher": {"name": "Lumen", "personality": "Curious, insightful, investigative", "avatar": "🔭"},
-      "creative_thinker": {"name": "Spark", "personality": "Inventive, witty, unconventional", "avatar": "⚡"},
-      "analyst": {"name": "Quant", "personality": "Thoughtful, analytical, evidence-driven", "avatar": "📊"},
-      "executor": {"name": "Forge", "personality": "Practical, resourceful, action-oriented", "avatar": "🔨"},
-      "challenger": {"name": "Riddle", "personality": "Questioning, unpredictable, skeptical", "avatar": "🃏"},
-      "specialist": {"name": "Sage", "personality": "Knowledgeable, precise, exploratory", "avatar": "🧭"},
-      "communicator": {"name": "Echo", "personality": "Diplomatic, trustworthy, persuasive", "avatar": "📣"},
-      "organizer": {"name": "Atlas", "personality": "Organized, discreet, coordinated", "avatar": "🗂️"},
-      "quality_reviewer": {"name": "Sentinel", "personality": "Observant, precise, detail-oriented", "avatar": "🎯"}
-    }
+      "leader": {
+        "name": "Captain",
+        "personality": "Steady, principled, decisive",
+        "avatar": "🛡️"
+      },
+      "researcher": {
+        "name": "Shirin",
+        "personality": "Curious, insightful, thorough",
+        "avatar": "🔭"
+      },
+      "creative_thinker": {
+        "name": "Jake",
+        "personality": "Inventive, witty, unconventional",
+        "avatar": "💡"
+      },
+      "analyst": {
+        "name": "Kaveh",
+        "personality": "Thoughtful, analytical, evidence-driven",
+        "avatar": "📊"
+      },
+      "executor": {
+        "name": "Mike",
+        "personality": "Practical, tireless, gets it done",
+        "avatar": "🔨"
+      },
+      "challenger": {
+        "name": "Neda",
+        "personality": "Skeptical, sharp, constructive",
+        "avatar": "🧐"
+      },
+      "specialist": {
+        "name": "Emily",
+        "personality": "Knowledgeable, precise, exploratory",
+        "avatar": "🧭"
+      },
+      "communicator": {
+        "name": "Dariush",
+        "personality": "Diplomatic, warm, persuasive",
+        "avatar": "📣"
+      },
+      "organizer": {
+        "name": "Sarah",
+        "personality": "Organized, discreet, always three steps ahead",
+        "avatar": "🗂️"
+      },
+      "quality_reviewer": {
+        "name": "Parisa",
+        "personality": "Sharp-eyed, precise, never misses a detail",
+        "avatar": "🎯"
+      }
+    },
+    "extra_names": [
+      "Amanda",
+      "Josh",
+      "Megan",
+      "Kevin",
+      "Hannah",
+      "Matt",
+      "Lily",
+      "Daniel",
+      "Natalie",
+      "Andrew",
+      "Brittany",
+      "Justin",
+      "Leila",
+      "Farhad",
+      "Nasrin",
+      "Cyrus"
+    ]
   },
-  "classic": {
-    "description": "The nicknames from the original spec. They echo comic-book characters, so keep this theme for personal use and don't ship it in anything public.",
+  "heroes": {
+    "description": "Superhero-style crew names (Lumen, Spark, Sentinel...).",
     "terminology": "themed",
     "identities": {
-      "leader": {"name": "Captain", "personality": "Confident, strategic, decisive"},
-      "researcher": {"name": "Vision", "personality": "Curious, insightful, investigative"},
-      "creative_thinker": {"name": "Stark", "personality": "Inventive, witty, unconventional"},
-      "analyst": {"name": "Banner", "personality": "Thoughtful, analytical, evidence-driven"},
-      "executor": {"name": "Ironclad", "personality": "Practical, resourceful, action-oriented"},
-      "challenger": {"name": "Loki", "personality": "Questioning, unpredictable, skeptical"},
-      "specialist": {"name": "Strange", "personality": "Knowledgeable, precise, exploratory"},
-      "communicator": {"name": "Cap", "personality": "Diplomatic, trustworthy, persuasive"},
-      "organizer": {"name": "Widow", "personality": "Organized, discreet, coordinated"},
-      "quality_reviewer": {"name": "Hawkeye", "personality": "Observant, precise, detail-oriented"}
-    }
+      "leader": {
+        "name": "Captain",
+        "personality": "Confident, strategic, decisive",
+        "avatar": "🛡️"
+      },
+      "researcher": {
+        "name": "Lumen",
+        "personality": "Curious, insightful, investigative",
+        "avatar": "🔭"
+      },
+      "creative_thinker": {
+        "name": "Spark",
+        "personality": "Inventive, witty, unconventional",
+        "avatar": "⚡"
+      },
+      "analyst": {
+        "name": "Quant",
+        "personality": "Thoughtful, analytical, evidence-driven",
+        "avatar": "📊"
+      },
+      "executor": {
+        "name": "Forge",
+        "personality": "Practical, resourceful, action-oriented",
+        "avatar": "🔨"
+      },
+      "challenger": {
+        "name": "Riddle",
+        "personality": "Questioning, unpredictable, skeptical",
+        "avatar": "🃏"
+      },
+      "specialist": {
+        "name": "Sage",
+        "personality": "Knowledgeable, precise, exploratory",
+        "avatar": "🧭"
+      },
+      "communicator": {
+        "name": "Echo",
+        "personality": "Diplomatic, trustworthy, persuasive",
+        "avatar": "📣"
+      },
+      "organizer": {
+        "name": "Atlas",
+        "personality": "Organized, discreet, coordinated",
+        "avatar": "🗂️"
+      },
+      "quality_reviewer": {
+        "name": "Sentinel",
+        "personality": "Observant, precise, detail-oriented",
+        "avatar": "🎯"
+      }
+    },
+    "extra_names": [
+      "Nova",
+      "Comet",
+      "Orbit",
+      "Pulse",
+      "Vector",
+      "Ember",
+      "Flux",
+      "Zenith"
+    ]
   },
   "professional": {
     "description": "Plain role titles and business terminology.",
     "terminology": "professional",
     "identities": {
-      "leader": {"name": "Lead", "personality": "Clear, structured, decisive"},
-      "researcher": {"name": "Researcher", "personality": "Thorough, neutral, well-sourced"},
-      "creative_thinker": {"name": "Ideation Lead", "personality": "Open, generative, practical"},
-      "analyst": {"name": "Analyst", "personality": "Rigorous, quantitative, cautious"},
-      "executor": {"name": "Builder", "personality": "Pragmatic, reliable, concise"},
-      "challenger": {"name": "Red Team", "personality": "Skeptical, constructive, direct"},
-      "specialist": {"name": "Domain Expert", "personality": "Precise, authoritative, careful"},
-      "communicator": {"name": "Communications", "personality": "Clear, audience-aware, tactful"},
-      "organizer": {"name": "Coordinator", "personality": "Methodical, punctual, structured"},
-      "quality_reviewer": {"name": "QA Reviewer", "personality": "Meticulous, evidence-based, impartial"}
+      "leader": {
+        "name": "Leader",
+        "personality": "Clear, structured, decisive"
+      },
+      "researcher": {
+        "name": "Researcher",
+        "personality": "Thorough, neutral, well-sourced"
+      },
+      "creative_thinker": {
+        "name": "Creative Thinker",
+        "personality": "Open, generative, practical"
+      },
+      "analyst": {
+        "name": "Analyst",
+        "personality": "Rigorous, quantitative, cautious"
+      },
+      "executor": {
+        "name": "Builder",
+        "personality": "Pragmatic, reliable, concise"
+      },
+      "challenger": {
+        "name": "Challenger",
+        "personality": "Skeptical, constructive, direct"
+      },
+      "specialist": {
+        "name": "Specialist",
+        "personality": "Precise, authoritative, careful"
+      },
+      "communicator": {
+        "name": "Communicator",
+        "personality": "Clear, audience-aware, tactful"
+      },
+      "organizer": {
+        "name": "Organizer",
+        "personality": "Methodical, punctual, structured"
+      },
+      "quality_reviewer": {
+        "name": "Quality Reviewer",
+        "personality": "Meticulous, evidence-based, impartial"
+      }
     }
   }
 }

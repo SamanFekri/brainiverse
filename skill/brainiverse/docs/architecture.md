@@ -9,7 +9,7 @@ Brainiverse has two layers:
    approvals, meetings, memory, skill vetting, metrics, and the audit log.
 
 Claude Code supplies the execution: the main session is the Leader; specialists are real subagents started
-with the **Agent tool**; parallelism comes from multiple Agent calls in one message.
+with the **Agent tool** (project-team agents as their own `.claude/agents/brainiverse-<id>` types); parallelism comes from multiple Agent calls in one message.
 
 ```
  Human ⇄ Leader (main Claude Code session) ── SKILL.md + workflows
@@ -32,6 +32,7 @@ with the **Agent tool**; parallelism comes from multiple Agent calls in one mess
 | Model Adapters | `tools.mjs` (`MODEL_ADAPTERS`) | model tiers (fast/balanced/deep/inherit) → host models |
 | Tool Adapters | `tools.mjs` (`TOOL_ADAPTERS`) | capabilities → host tools; risk levels |
 | Skill Discovery | `skills.mjs`, `workflows/skill-discovery.md` | local inventory, candidates, static security scan, approval gate, install verification |
+| Project teams & intake | `project.mjs` | project team selection, `.claude/agents/` sync, request routing (answer / quick team / project team) |
 | Memory Manager | `memory.mjs` | agent / team / project scopes, secret refusal and redaction |
 | Permission Manager | `permissions.mjs` | capability checks, approvals, agent-vs-leader command guard |
 | Evaluation Engine | `evaluation.mjs` | evidence-required reviews, metrics |

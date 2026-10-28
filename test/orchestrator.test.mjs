@@ -8,9 +8,9 @@ const ids = (tasks) => tasks.map((t) => t.id);
 
 test("dependencies gate scheduling; independent tasks are ready together", () => {
   const s = missionState();
-  o.addTask(s, { objective: "research", agent: "lumen" });
-  o.addTask(s, { objective: "budget", agent: "penny" });
-  o.addTask(s, { objective: "itinerary", agent: "navigator", depends_on: ["T1", "T2"] });
+  o.addTask(s, { objective: "research", agent: "researcher" });
+  o.addTask(s, { objective: "budget", agent: "budget-analyst" });
+  o.addTask(s, { objective: "itinerary", agent: "itinerary-planner", depends_on: ["T1", "T2"] });
   assert.deepEqual(ids(o.readyTasks(s)), ["T1", "T2"]);
   assert.throws(() => o.startTask(s, "T3"), /waiting on dependencies/);
   for (const id of ["T1", "T2"]) {
@@ -23,13 +23,13 @@ test("dependencies gate scheduling; independent tasks are ready together", () =>
 
 test("unknown dependencies and agents are rejected", () => {
   const s = missionState();
-  assert.throws(() => o.addTask(s, { objective: "x", agent: "lumen", depends_on: ["T9"] }), /unknown dependency/);
+  assert.throws(() => o.addTask(s, { objective: "x", agent: "researcher", depends_on: ["T9"] }), /unknown dependency/);
   assert.throws(() => o.addTask(s, { objective: "x", agent: "nobody" }), /no agent/);
 });
 
 test("concurrency limit caps the ready set and starting", () => {
   const s = missionState("travel-squad", { max_concurrent: 2 });
-  for (let i = 0; i < 4; i++) o.addTask(s, { objective: `t${i}`, agent: "lumen" });
+  for (let i = 0; i < 4; i++) o.addTask(s, { objective: `t${i}`, agent: "researcher" });
   assert.equal(o.readyTasks(s).length, 2);
   o.startTask(s, "T1");
   o.startTask(s, "T2");
@@ -39,25 +39,25 @@ test("concurrency limit caps the ready set and starting", () => {
 
 test("invocation budget and per-agent limits stop runaway work", () => {
   const s = missionState("travel-squad", { max_invocations: 1 });
-  o.addTask(s, { objective: "a", agent: "lumen" });
-  o.addTask(s, { objective: "b", agent: "lumen" });
+  o.addTask(s, { objective: "a", agent: "researcher" });
+  o.addTask(s, { objective: "b", agent: "researcher" });
   o.startTask(s, "T1");
   assert.throws(() => o.startTask(s, "T2"), /invocation budget/);
 });
 
 test("task limit and delegation depth are enforced", () => {
   const s = missionState("travel-squad", { max_tasks: 3, max_delegation_depth: 1 });
-  o.addTask(s, { objective: "root", agent: "lumen" });
-  o.addTask(s, { objective: "child", agent: "lumen", parent: "T1" });
-  assert.throws(() => o.addTask(s, { objective: "grandchild", agent: "lumen", parent: "T2" }), /delegation depth/);
-  o.addTask(s, { objective: "third", agent: "lumen" });
-  assert.throws(() => o.addTask(s, { objective: "fourth", agent: "lumen" }), /task limit/);
+  o.addTask(s, { objective: "root", agent: "researcher" });
+  o.addTask(s, { objective: "child", agent: "researcher", parent: "T1" });
+  assert.throws(() => o.addTask(s, { objective: "grandchild", agent: "researcher", parent: "T2" }), /delegation depth/);
+  o.addTask(s, { objective: "third", agent: "researcher" });
+  assert.throws(() => o.addTask(s, { objective: "fourth", agent: "researcher" }), /task limit/);
 });
 
 test("failures retry within limits, then fail and block dependents", () => {
   const s = missionState("travel-squad", { max_retries: 1 });
-  o.addTask(s, { objective: "flaky", agent: "lumen" });
-  o.addTask(s, { objective: "after", agent: "navigator", depends_on: ["T1"] });
+  o.addTask(s, { objective: "flaky", agent: "researcher" });
+  o.addTask(s, { objective: "after", agent: "itinerary-planner", depends_on: ["T1"] });
   o.startTask(s, "T1");
   assert.equal(o.fail(s, "T1", "network").status, "pending", "first failure retries");
   o.startTask(s, "T1");
@@ -68,7 +68,7 @@ test("failures retry within limits, then fail and block dependents", () => {
 
 test("timeouts are swept into failures", () => {
   const s = missionState("travel-squad", { max_retries: 0 });
-  o.addTask(s, { objective: "slow", agent: "lumen", timeout_s: 10 });
+  o.addTask(s, { objective: "slow", agent: "researcher", timeout_s: 10 });
   o.startTask(s, "T1", 1000);
   assert.deepEqual(o.sweepTimeouts(s, 1005), []);
   assert.deepEqual(o.sweepTimeouts(s, 1011), ["T1"]);
@@ -78,9 +78,9 @@ test("timeouts are swept into failures", () => {
 
 test("cancellation cascades to dependents", () => {
   const s = missionState();
-  o.addTask(s, { objective: "a", agent: "lumen" });
-  o.addTask(s, { objective: "b", agent: "penny", depends_on: ["T1"] });
-  o.addTask(s, { objective: "c", agent: "navigator", depends_on: ["T2"] });
+  o.addTask(s, { objective: "a", agent: "researcher" });
+  o.addTask(s, { objective: "b", agent: "budget-analyst", depends_on: ["T1"] });
+  o.addTask(s, { objective: "c", agent: "itinerary-planner", depends_on: ["T2"] });
   o.startTask(s, "T1");
   o.cancel(s, "T1");
   assert.equal(s.invocations.I1.status, "cancelled");
@@ -90,7 +90,7 @@ test("cancellation cascades to dependents", () => {
 
 test("submissions are proposals until accepted; criteria need evidence", () => {
   const s = missionState();
-  o.addTask(s, { objective: "a", agent: "lumen", acceptance: ["has sources"] });
+  o.addTask(s, { objective: "a", agent: "researcher", acceptance: ["has sources"] });
   o.startTask(s, "T1");
   o.submit(s, "T1", result(["x"], { evidence: ["https://example.org"] }));
   assert.equal(s.tasks.T1.status, "submitted");
@@ -101,7 +101,7 @@ test("submissions are proposals until accepted; criteria need evidence", () => {
 
 test("revisions are bounded by max_iterations", () => {
   const s = missionState("travel-squad", { max_iterations: 1 });
-  o.addTask(s, { objective: "draft", agent: "lumen" });
+  o.addTask(s, { objective: "draft", agent: "researcher" });
   o.startTask(s, "T1");
   o.submit(s, "T1", result());
   o.revise(s, "T1", "add sources");
@@ -122,7 +122,7 @@ test("result protocol: required fields and verified actions need evidence", () =
 
 test("only running tasks accept submissions", () => {
   const s = missionState();
-  o.addTask(s, { objective: "a", agent: "lumen" });
+  o.addTask(s, { objective: "a", agent: "researcher" });
   assert.throws(() => o.submit(s, "T1", result()), /only a running task/);
 });
 
@@ -142,12 +142,12 @@ test("gated capabilities need the agent to hold them and an approval per task", 
 test("paused missions refuse new work", () => {
   const s = missionState();
   s.status = "paused";
-  assert.throws(() => o.addTask(s, { objective: "a", agent: "lumen" }), /paused/);
+  assert.throws(() => o.addTask(s, { objective: "a", agent: "researcher" }), /paused/);
 });
 
 test("progress reports counts, ready tasks and pending approvals", () => {
   const s = missionState();
-  o.addTask(s, { objective: "a", agent: "lumen" });
+  o.addTask(s, { objective: "a", agent: "researcher" });
   permissions.request(s, { kind: "action", detail: "x" });
   const p = o.progress(s);
   assert.equal(p.tasks.pending, 1);

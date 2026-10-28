@@ -8,6 +8,7 @@ import * as meetings from "./meetings.mjs";
 import * as memory from "./memory.mjs";
 import * as orchestrator from "./orchestrator.mjs";
 import * as permissions from "./permissions.mjs";
+import * as project from "./project.mjs";
 import * as registry from "./registry.mjs";
 import * as skills from "./skills.mjs";
 import * as teams from "./teams.mjs";
@@ -18,7 +19,7 @@ import { BrainiverseError, Workspace, readJson, writeJson } from "./store.mjs";
 // [command, subcommand] pairs a subagent may run. Everything else is Leader-only.
 const AGENT_ALLOWED = new Set([
   "task brief", "task submit", "task show", "task list", "status", "meeting show", "chat show",
-  "skill local", "skill scan", "archetypes", "memory list",
+  "skill local", "skill scan", "archetypes", "memory list", "project status",
 ]);
 
 const splitCsv = (value) => (value || "").split(",").map((v) => v.trim()).filter(Boolean);
@@ -43,13 +44,43 @@ function parseLimits(items = []) {
   return limits;
 }
 
-// -- team loading: a saved team, or the active mission's snapshot ("@mission") ------------
+// -- team loading: a saved team, "@project" (the project team) or "@mission" (the active mission's team) --
 
-const loadTeam = (ws, ref, mission) => (ref === "@mission" ? ws.readMission(mission).team : teams.load(ws, ref));
+function loadTeam(ws, ref, mission) {
+  if (ref === "@mission") return ws.readMission(mission).team;
+  if (ref === "@project") return project.requireProjectTeam(ws);
+  return teams.load(ws, ref);
+}
+
+const isProjectTeam = (ws, team) => team.kind === "project" && ws.config().project_team === team.id;
+
+/** Save the project team, rewrite its .claude/agents files, and refresh the active mission that uses it. */
+function saveProjectTeam(ws, team) {
+  teams.save(ws, team);
+  const synced = project.sync(ws, team);
+  const active = ws.config().active_mission;
+  if (active) {
+    try {
+      ws.mission(active, (state) => {
+        if (state.team_ref === team.id && state.status !== "closed") state.team = team;
+      });
+    } catch {
+      // the active mission may have been deleted; nothing to refresh
+    }
+  }
+  return synced;
+}
 
 function storeTeam(ws, ref, team, mission) {
+  teams.validateTeam(team);
   if (ref === "@mission") {
-    ws.mission(mission, (state) => { state.team = teams.validateTeam(team); });
+    ws.mission(mission, (state) => { state.team = team; });
+    // A project mission's team *is* the project team: changes stick to the project.
+    if (isProjectTeam(ws, team)) saveProjectTeam(ws, team);
+    return team;
+  }
+  if (isProjectTeam(ws, team)) {
+    saveProjectTeam(ws, team);
     return team;
   }
   return teams.save(ws, team);
@@ -109,12 +140,12 @@ handlers.capabilities = (ws) => Object.fromEntries(Object.entries(tools.CAPABILI
 handlers.agent = (ws, a, sub) => {
   if (sub === "list") {
     if (a.team) {
-      return loadTeam(ws, a.team, a.mission).agents.map((p) => ({ id: p.id, name: p.name, archetype: p.archetype, enabled: p.enabled }));
+      return loadTeam(ws, a.team, a.mission).agents.map((p) => ({ id: p.id, label: registry.label(p), archetype: p.archetype, enabled: p.enabled }));
     }
-    return registry.listAgents(ws).map((p) => ({ id: p.id, name: p.name, archetype: p.archetype }));
+    return registry.listAgents(ws).map((p) => ({ id: p.id, label: registry.label(p), archetype: p.archetype }));
   }
   if (sub === "new") {
-    let profile = registry.makeAgent(a.archetype, { id: a.id, theme: ws.config().theme, name: a.name });
+    let profile = registry.makeAgent(a.archetype, { id: a.id, theme: ws.config().theme, name: a.name, position: a.position });
     if (a.set) profile = registry.edit(profile, { sets: a.set });
     return addToTeamOrLibrary(ws, a, profile);
   }
@@ -126,7 +157,7 @@ handlers.agent = (ws, a, sub) => {
   }
   const profile = loadAgent(ws, a);
   switch (sub) {
-    case "show": return { ...profile, host_tools: tools.hostTools(profile.capabilities, ws.config().host) };
+    case "show": return { label: registry.label(profile), ...profile, host_tools: tools.hostTools(profile.capabilities, ws.config().host) };
     case "edit": return storeAgent(ws, a, registry.edit(profile, { sets: a.set || [], adds: a.add || [], removes: a.remove || [] }));
     case "rename": return storeAgent(ws, a, registry.rename(profile, {
       name: a.name, personality: a.personality, communication_style: a.style, avatar: a.avatar }));
@@ -160,7 +191,7 @@ handlers.agent = (ws, a, sub) => {
         note: "Run this prompt with the Agent tool to test the agent in isolation; nothing is recorded.",
         agent_call: {
           subagent_type: "general-purpose", description: `Test ${profile.name}`, ...(model ? { model } : {}),
-          prompt: `You are ${profile.name}, a ${registry.archetypes()[profile.archetype].title}. ` +
+          prompt: `You are ${registry.label(profile)}, a ${registry.archetypes()[profile.archetype].title}. ` +
             `Personality: ${profile.personality}. Responsibilities: ${profile.responsibilities.join("; ")}. ${profile.instructions}\n\n` +
             `Test task: ${a.task}\n\nUse only these tools: ${tools.hostTools(profile.capabilities).join(", ") || "none"}. ` +
             "Answer with the result-protocol fields: status, findings, evidence, assumptions, uncertainty, recommendations.",
@@ -180,7 +211,10 @@ handlers.team = (ws, a, sub) => {
     });
   }
   if (sub === "list") {
-    return ws.listRecords("teams").map((t) => ({ id: t.id, name: t.name, agents: t.agents.length, status: t.status || "approved" }));
+    const projectId = ws.config().project_team;
+    return ws.listRecords("teams").map((t) => ({
+      id: t.id, name: t.name, kind: t.id === projectId ? "project" : "quick", agents: t.agents.length, status: t.status || "approved",
+    }));
   }
   if (sub === "propose") {
     const proposal = teams.proposeTeam(a.mission_text, { theme, maxAgents: a.max, teamId: a.id });
@@ -189,7 +223,7 @@ handlers.team = (ws, a, sub) => {
     teams.save(ws, team);
     return {
       ...rest, team_id: team.id,
-      roster: team.agents.map((p) => ({ id: p.id, name: p.name, archetype: p.archetype, why: reasons[p.id], capabilities: p.capabilities })),
+      roster: team.agents.map((p) => ({ id: p.id, label: registry.label(p), archetype: p.archetype, why: reasons[p.id], capabilities: p.capabilities })),
     };
   }
   if (sub === "from-template") {
@@ -204,19 +238,25 @@ handlers.team = (ws, a, sub) => {
   }
   const team = loadTeam(ws, a.team_ref, a.mission);
   switch (sub) {
-    case "show": return { ...team, warnings: teams.redundancyWarnings(team) };
+    case "show": return { roster: team.agents.map((p) => `${p.id}: ${registry.label(p)}${p.enabled ? "" : " (off)"}`), ...team, warnings: teams.redundancyWarnings(team) };
     case "approve": return storeTeam(ws, a.team_ref, { ...team, status: "approved" }, a.mission).status;
     case "add": {
       const profile = a.from_library ? registry.load(ws, a.from_library) : registry.makeAgent(a.archetype, {
-        id: a.id, theme, name: a.name, description: a.description, expertise: a.expertise ? splitCsv(a.expertise) : undefined,
+        id: a.id, theme, name: a.name, position: a.position, description: a.description,
+        expertise: a.expertise ? splitCsv(a.expertise) : undefined,
       });
+      // Two agents never share a name: an unnamed newcomer gets the next free name from the theme's pool.
+      const taken = team.agents.map((p) => p.name);
+      if (!a.name && !a.from_library && taken.some((n) => n.toLowerCase() === profile.name.toLowerCase())) {
+        profile.name = registry.unusedName(theme, taken) || `${profile.name} ${team.agents.length + 1}`;
+      }
       const updated = teams.addAgent(team, profile);
       storeTeam(ws, a.team_ref, updated, a.mission);
-      return { added: profile.id, warnings: teams.redundancyWarnings(updated) };
+      return { added: profile.id, label: registry.label(profile), warnings: teams.redundancyWarnings(updated) };
     }
     case "remove":
       storeTeam(ws, a.team_ref, teams.removeAgent(team, a.agent_id), a.mission);
-      return { removed: a.agent_id };
+      return { removed: teams.findAgent(team, a.agent_id).id };
     case "leader": return storeTeam(ws, a.team_ref, teams.setLeader(team, a.agent_id), a.mission).leader;
     case "rename": return storeTeam(ws, a.team_ref, { ...team, name: a.name }, a.mission).name;
     case "save": {
@@ -229,6 +269,7 @@ handlers.team = (ws, a, sub) => {
       return { exported: out };
     }
     case "delete":
+      if (ws.config().project_team === team.id) throw new BrainiverseError("this is the project team; run `project release` first");
       ws.deleteRecord("teams", team.id);
       return { deleted: team.id };
   }
@@ -238,7 +279,8 @@ handlers.team = (ws, a, sub) => {
 handlers.mission = (ws, a, sub) => {
   switch (sub) {
     case "new": {
-      const team = teams.load(ws, a.team);
+      const team = a.team ? loadTeam(ws, a.team) : project.projectTeam(ws);
+      if (!team) throw new BrainiverseError("--team is required (this project has no project team)");
       const state = orchestrator.newMission(a.goal, team, {
         id: a.id, title: a.title, success: a.success || [], constraints: a.constraint || [],
         assumptions: a.assumption || [], resources: a.resource || [], limits: parseLimits(a.limit),
@@ -299,7 +341,7 @@ handlers.mission = (ws, a, sub) => {
 };
 
 export function report(state) {
-  const names = Object.fromEntries(state.team.agents.map((p) => [p.id, p.name]));
+  const names = Object.fromEntries(state.team.agents.map((p) => [p.id, registry.label(p)]));
   const tasks = Object.values(state.tasks);
   const lines = [`# Mission report: ${state.title}`, "", `**Goal:** ${state.goal}`, `**Status:** ${state.status}`, ""];
   if (state.success_criteria.length) lines.push("## Success criteria", ...state.success_criteria.map((c) => `- ${c}`), "");
@@ -339,9 +381,15 @@ export function report(state) {
   return lines.join("\n");
 }
 
-const startPayload = (ws, state, task, invocation) => ({
-  task: task.id, invocation: invocation.id, agent: task.agent, agent_call: briefs.agentCall(ws, state, task),
-});
+function startPayload(ws, state, task, invocation) {
+  const { call, leader_submits, fallback } = briefs.agentCall(ws, state, task);
+  return {
+    task: task.id, invocation: invocation.id, agent: task.agent, label: registry.label(teams.findAgent(state.team, task.agent)),
+    agent_call: call,
+    ...(leader_submits ? { leader_submits: true, note: "This agent has no Bash: when it returns, save the JSON it ends with to a file and run `task submit " + task.id + " --file <path>`." } : {}),
+    ...(fallback ? { fallback } : {}),
+  };
+}
 
 handlers.task = (ws, a, sub) => {
   const acting = permissions.actingAgent();
@@ -435,16 +483,17 @@ handlers.status = (ws, a) => {
   const state = ws.readMission(a.mission);
   const p = orchestrator.progress(state);
   const term = registry.terminology(ws.config().terminology);
-  const names = Object.fromEntries(state.team.agents.map((x) => [x.id, x.name]));
+  const names = Object.fromEntries(state.team.agents.map((x) => [x.id, registry.label(x)]));
   const lines = [
     `${term.project}: ${state.title} [${state.status}]`,
-    `${term.team}: ${state.team.name} — ${state.team.agents.map((x) => `${x.name}${x.enabled ? "" : " (off)"}`).join(", ")}`,
+    `${term.team}${state.team.kind === "project" ? " (project team)" : ""}: ${state.team.name} — ` +
+      state.team.agents.map((x) => `${registry.label(x)}${x.enabled ? "" : " (off)"}`).join(", "),
     `Tasks: ${Object.entries(p.tasks).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(", ") || "none yet"}`,
     `Invocations: ${p.invocations}  Tokens: ${p.tokens}`,
   ];
   for (const t of Object.values(state.tasks)) {
     if (!["done", "cancelled"].includes(t.status)) {
-      lines.push(`  ${t.id.padEnd(4)} ${t.status.padEnd(10)} ${(names[t.agent] || t.agent).padEnd(16)} ${t.objective.slice(0, 70)}`);
+      lines.push(`  ${t.id.padEnd(4)} ${t.status.padEnd(10)} ${(names[t.agent] || t.agent).padEnd(30)} ${t.objective.slice(0, 60)}`);
     }
   }
   if (p.ready.length) lines.push(`Ready to start: ${p.ready.join(", ")}`);
@@ -523,10 +572,11 @@ handlers.chat = (ws, a, sub) => {
   return ws.mission(a.mission, (state) => {
     switch (sub) {
       case "start": {
-        if (a.agent === state.team.leader) throw new BrainiverseError("the leader is already your main contact; just talk to them");
-        const m = meetings.startDirect(state, a.agent, a.topic || "");
-        audit.log(ws, state.id, "direct_line_opened", { chat: m.id, agent: a.agent });
-        return { chat: m.id, agent: a.agent };
+        const profile = teams.findAgent(state.team, a.agent);
+        if (profile.id === state.team.leader) throw new BrainiverseError("the leader is already your main contact; just talk to them");
+        const m = meetings.startDirect(state, profile.id, a.topic || "");
+        audit.log(ws, state.id, "direct_line_opened", { chat: m.id, agent: profile.id });
+        return { chat: m.id, agent: profile.id, label: registry.label(profile) };
       }
       case "say": {
         const task = meetings.directMessage(state, a.chat_id, a.text);
@@ -545,6 +595,80 @@ handlers.chat = (ws, a, sub) => {
     throw new BrainiverseError(`unknown chat command ${sub}`);
   });
 };
+
+// Project teams: the long-lived team of this project, written to .claude/agents/.
+handlers.project = (ws, a, sub) => {
+  switch (sub) {
+    case "status": {
+      const team = project.projectTeam(ws);
+      return {
+        project_team: team && {
+          id: team.id, name: team.name,
+          roster: team.agents.map((p) => ({
+            id: p.id, label: registry.label(p), enabled: p.enabled,
+            claude_agent: p.id === team.leader ? "(main session)" : project.hasAgentFile(ws, p) ? project.agentName(p.id) : null,
+          })),
+        },
+        in_code_repo: project.isRepo(project.projectRoot(ws)),
+        agents_dir: project.agentsDir(ws),
+      };
+    }
+    case "adopt": {
+      const current = ws.config().project_team;
+      if (current && current !== a.team && !a.force) {
+        throw new BrainiverseError(`this project already has the project team ${current}; pass --force to replace it`);
+      }
+      const team = { ...teams.load(ws, a.team), kind: "project", status: "approved" };
+      if (current && current !== team.id) {
+        project.unsync(ws);
+        const old = teams.load(ws, current);
+        teams.save(ws, { ...old, kind: "quick" });
+      }
+      ws.setConfig({ project_team: team.id });
+      const synced = saveProjectTeam(ws, team);
+      return { project_team: team.id, ...synced,
+        note: "Agent types added in this session load in the next Claude Code session; until then brainiverse falls back to general-purpose." };
+    }
+    case "sync": return project.sync(ws, project.requireProjectTeam(ws));
+    case "release": {
+      const team = project.requireProjectTeam(ws);
+      const removed = a.keep_files ? [] : project.unsync(ws);
+      teams.save(ws, { ...team, kind: "quick" });
+      ws.setConfig({ project_team: null });
+      return { released: team.id, removed };
+    }
+  }
+  throw new BrainiverseError(`unknown project command ${sub}`);
+};
+
+const INTAKE_NEXT = {
+  ask: "Ask the human what they want (show the project team if there is one).",
+  answer: "Answer directly; offer a team only if a bigger mission is behind the question.",
+  continue_project: "Ask the kickoff questions for this piece of work, summarize, then `mission new --goal \"...\"` with the project team (no --team needed).",
+  new_project: "Ask all kickoff questions first. Then `team propose`, show the summary and the team as Name (Position) with reasons, get one OK, then `project adopt <team>` and `mission new`.",
+  quick_team: "Ask all kickoff questions first. Then `team propose`, show the summary and the team as Name (Position) with reasons, get one OK, then `mission new --team <team>`.",
+};
+
+handlers.intake = (ws, a) => {
+  const result = project.intakeWithKickoff(ws, a.request || "");
+  return { ...result, next: INTAKE_NEXT[result.mode] };
+};
+
+// Talk to one agent: reuse the open direct line with that agent, or open one.
+handlers.ask = (ws, a) => ws.mission(a.mission, (state) => {
+  const profile = teams.findAgent(state.team, a.agent);
+  if (profile.id === state.team.leader) throw new BrainiverseError("the leader is already your main contact; just talk to them");
+  let chat = Object.values(state.meetings).find((m) => m.mode === "direct" && m.status === "active" && m.participants[0] === profile.id);
+  if (!chat) {
+    chat = meetings.startDirect(state, profile.id, "");
+    audit.log(ws, state.id, "direct_line_opened", { chat: chat.id, agent: profile.id });
+  }
+  const task = meetings.directMessage(state, chat.id, a.message);
+  const invocation = orchestrator.startTask(state, task.id);
+  audit.log(ws, state.id, "direct_message", { chat: chat.id, task: task.id, text: a.message });
+  return { chat: chat.id, ...startPayload(ws, state, task, invocation),
+    next: "Invoke the agent_call with the Agent tool, then show the reply verbatim under the agent's Name (Position)." };
+});
 
 handlers.approval = (ws, a, sub) => {
   if (sub === "list") {
@@ -675,7 +799,8 @@ export const SPEC = {
       help: "create and customize agents",
       subs: {
         list: agentSub([], {}, "list agents (library, or --team)"),
-        new: agentSub([], { archetype: { required: true }, id: {}, name: {}, set: { ...MULTI, help: "field=value (lists: a;b;c)" } }, "create an agent"),
+        new: agentSub([], { archetype: { required: true }, id: {}, name: {}, position: { help: "shown in brackets, e.g. Budget Analyst" },
+          set: { ...MULTI, help: "field=value (lists: a;b;c)" } }, "create an agent"),
         import: agentSub(["path"], {}, "import an agent JSON file (gated capabilities are stripped)"),
         show: agentSub(["agent_id"], {}, "show a profile"),
         edit: agentSub(["agent_id"], { set: MULTI, add: MULTI, remove: MULTI }, "edit fields"),
@@ -698,9 +823,10 @@ export const SPEC = {
         propose: { help: "propose a team for a mission", positional: ["mission_text"], options: { max: { type: "int" }, id: {} } },
         "from-template": { help: "create a team from a template", positional: ["template"], options: { id: {} } },
         import: { help: "import a team JSON file", positional: ["path"] },
-        show: teamSub([], {}, "show a team"),
+        show: teamSub([], {}, "show a team (team id, @project or @mission)"),
         approve: teamSub([], {}, "mark a draft team approved"),
-        add: teamSub([], { archetype: { default: "specialist" }, id: {}, name: {}, description: {}, expertise: { help: "comma-separated" },
+        add: teamSub([], { archetype: { default: "specialist" }, id: {}, name: {}, position: { help: "shown in brackets, e.g. Visa Expert" },
+          description: {}, expertise: { help: "comma-separated" },
           "from-library": { help: "add a saved agent from the library" } }, "add an agent"),
         remove: teamSub(["agent_id"], {}, "remove an agent"),
         leader: teamSub(["agent_id"], {}, "choose the leader"),
@@ -713,7 +839,7 @@ export const SPEC = {
     mission: {
       help: "start and manage missions",
       subs: {
-        new: { help: "start a mission", options: { goal: { required: true }, team: { required: true }, id: {}, title: {},
+        new: { help: "start a mission (team defaults to the project team)", options: { goal: { required: true }, team: {}, id: {}, title: {},
           success: MULTI, constraint: MULTI, assumption: MULTI, resource: MULTI, limit: { ...MULTI, help: "key=value" } } },
         list: { help: "list missions" },
         use: { help: "switch the active mission", positional: ["mission_id"] },
@@ -748,6 +874,17 @@ export const SPEC = {
         sweep: { help: "fail tasks that exceeded their timeout", options: M },
       },
     },
+    intake: { help: "decide how to handle a request: answer, quick team, new or existing project team", positional: ["?request"] },
+    project: {
+      help: "the project's long-lived team (written to .claude/agents/)",
+      subs: {
+        status: { help: "show the project team and its Claude Code agent files" },
+        adopt: { help: "make a team this project's team and write its agents", positional: ["team"], options: { force: { type: "bool" } } },
+        sync: { help: "rewrite .claude/agents/ from the project team" },
+        release: { help: "stop using a project team (removes its generated agent files)", options: { "keep-files": { type: "bool" } } },
+      },
+    },
+    ask: { help: "talk to one agent: a question or a further request (opens or reuses a direct line)", positional: ["agent", "message"], options: M },
     status: { help: "progress board", options: M },
     metrics: { help: "mission metrics", options: M },
     perm: { help: "check an agent's permission for a capability", positional: ["agent", "capability"], options: M },

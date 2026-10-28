@@ -3,15 +3,98 @@
   "name": "Discovery Crew",
   "description": "Investigates open questions and business ideas, then recommends a course of action.",
   "doc": "teams/discovery-crew.md",
-  "leader": "captain",
+  "leader": "leader",
   "agents": [
-    {"id": "captain", "archetype": "leader", "name": "Captain", "description": "Leads the investigation."},
-    {"id": "sherlock", "archetype": "researcher", "name": "Sherlock", "description": "Researches the market.", "expertise": ["market research", "competitor analysis"], "personality": "Deductive, meticulous, dry-witted"},
-    {"id": "lumen", "archetype": "researcher", "name": "Lumen", "description": "Identifies trends and opportunities.", "expertise": ["trend analysis", "emerging technologies"]},
-    {"id": "brain", "archetype": "analyst", "name": "Brain", "description": "Analyzes evidence and financial assumptions.", "expertise": ["financial modeling", "unit economics"]},
-    {"id": "spark", "archetype": "creative_thinker", "name": "Spark", "description": "Generates alternative concepts."},
-    {"id": "skeptic", "archetype": "challenger", "name": "Skeptic", "description": "Challenges the thesis."},
-    {"id": "auditor", "archetype": "quality_reviewer", "name": "Auditor", "description": "Reviews the final recommendation."}
+    {
+      "id": "leader",
+      "archetype": "leader",
+      "position": "Leader",
+      "names": {
+        "people": "Captain",
+        "heroes": "Captain",
+        "professional": "Leader"
+      },
+      "description": "Leads the investigation."
+    },
+    {
+      "id": "market-researcher",
+      "archetype": "researcher",
+      "position": "Market Researcher",
+      "names": {
+        "people": "Madison",
+        "heroes": "Sherlock",
+        "professional": "Market Researcher"
+      },
+      "description": "Researches the market.",
+      "expertise": [
+        "market research",
+        "competitor analysis"
+      ],
+      "personality": "Deductive, meticulous, dry-witted"
+    },
+    {
+      "id": "trend-explorer",
+      "archetype": "researcher",
+      "position": "Trend Explorer",
+      "names": {
+        "people": "Lauren",
+        "heroes": "Lumen",
+        "professional": "Trend Explorer"
+      },
+      "description": "Identifies trends and opportunities.",
+      "expertise": [
+        "trend analysis",
+        "emerging technologies"
+      ]
+    },
+    {
+      "id": "financial-analyst",
+      "archetype": "analyst",
+      "position": "Financial Analyst",
+      "names": {
+        "people": "Reza",
+        "heroes": "Brain",
+        "professional": "Financial Analyst"
+      },
+      "description": "Analyzes evidence and financial assumptions.",
+      "expertise": [
+        "financial modeling",
+        "unit economics"
+      ]
+    },
+    {
+      "id": "creative",
+      "archetype": "creative_thinker",
+      "position": "Creative Thinker",
+      "names": {
+        "people": "Jake",
+        "heroes": "Spark",
+        "professional": "Creative Thinker"
+      },
+      "description": "Generates alternative concepts."
+    },
+    {
+      "id": "challenger",
+      "archetype": "challenger",
+      "position": "Challenger",
+      "names": {
+        "people": "Neda",
+        "heroes": "Skeptic",
+        "professional": "Challenger"
+      },
+      "description": "Challenges the thesis."
+    },
+    {
+      "id": "reviewer",
+      "archetype": "quality_reviewer",
+      "position": "Quality Reviewer",
+      "names": {
+        "people": "Parisa",
+        "heroes": "Auditor",
+        "professional": "Quality Reviewer"
+      },
+      "description": "Reviews the final recommendation."
+    }
   ],
   "workflow": [
     "Investigate the question",

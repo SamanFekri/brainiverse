@@ -12,8 +12,8 @@ bv skill gap "slides" "Need to turn the itinerary into a shareable slide deck"
 `bv skill local slides deck` lists skills already installed (user, project, plugins). An installed skill only
 needs attaching:
 ```bash
-bv skill candidate --name pptx --source local --local-path ~/.claude/skills/pptx --purpose "..." --agent echo --gap G1
-bv skill verify S1 --path ~/.claude/skills/pptx      # attaches it to Echo's profile
+bv skill candidate --name pptx --source local --local-path ~/.claude/skills/pptx --purpose "..." --agent dariush --gap G1
+bv skill verify S1 --path ~/.claude/skills/pptx      # attaches it to Dariush (Communicator)
 ```
 
 ## 3. Search external sources (delegate to the Researcher)
@@ -43,7 +43,7 @@ agent uses it, benefits, compatibility, permissions, risks, source link, install
 
 ## 6. Approve → install → verify
 ```bash
-bv approval request --kind skill_install --skill S1 --detail "Install <name> from <url> for Echo"
+bv approval request --kind skill_install --skill S1 --detail "Install <name> from <url> for Dariush (Communicator)"
 # AskUserQuestion; then record the answer:
 bv approval resolve A1 approve --note "User: 'yes, install it'"
 bv skill approve S1 --approval A1

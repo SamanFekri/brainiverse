@@ -13,13 +13,13 @@ test("memory: scopes, edit, delete, secret refusal", () => {
   const ws = workspace();
   const s = missionState();
   memory.add(ws, "project", "User is vegetarian", { state: s });
-  memory.add(ws, "agent:penny", "Budgets in EUR");
+  memory.add(ws, "agent:budget-analyst", "Budgets in EUR");
   memory.add(ws, "team:travel-squad", "Max 3 hotel changes");
-  const r = memory.add(ws, "agent:lumen", "Prefers official tourism sites");
-  memory.edit(ws, "agent:lumen", r.id, "Prefers JNTO");
-  assert.equal(memory.list(ws, "agent:lumen")[0].text, "Prefers JNTO");
-  memory.remove(ws, "agent:lumen", r.id);
-  assert.equal(memory.list(ws, "agent:lumen").length, 0);
+  const r = memory.add(ws, "agent:researcher", "Prefers official tourism sites");
+  memory.edit(ws, "agent:researcher", r.id, "Prefers JNTO");
+  assert.equal(memory.list(ws, "agent:researcher")[0].text, "Prefers JNTO");
+  memory.remove(ws, "agent:researcher", r.id);
+  assert.equal(memory.list(ws, "agent:researcher").length, 0);
   assert.throws(() => memory.add(ws, "project", "api_key=sk-abcdefghijklmnopqrstuvwxyz", { state: s }), /refusing/);
   assert.throws(() => memory.add(ws, "project", "card 4111 1111 1111 1111", { state: s }), /refusing/);
   assert.throws(() => memory.add(ws, "galaxy:x", "y"), /scope/);
@@ -28,10 +28,10 @@ test("memory: scopes, edit, delete, secret refusal", () => {
 test("memory isolation: agents never see other agents' memory", () => {
   const ws = workspace();
   const s = missionState();
-  memory.add(ws, "agent:penny", "Penny's private note");
-  memory.add(ws, "agent:lumen", "Lumen's note");
+  memory.add(ws, "agent:budget-analyst", "Penny's private note");
+  memory.add(ws, "agent:researcher", "Lumen's note");
   memory.add(ws, "project", "Shared fact", { state: s });
-  const ctx = memory.contextFor(ws, s, "lumen");
+  const ctx = memory.contextFor(ws, s, "researcher");
   assert.deepEqual(ctx.agent, ["Lumen's note"]);
   assert.deepEqual(ctx.project, ["Shared fact"]);
   assert.ok(!JSON.stringify(ctx).includes("Penny's private note"));
@@ -44,9 +44,9 @@ test("redaction scrubs secrets", () => {
 
 test("approvals: need a human note; agents cannot resolve them", () => {
   const s = missionState();
-  const a = permissions.request(s, { kind: "capability", detail: "send pitch", agent: "lumen", capability: "send_communication" });
+  const a = permissions.request(s, { kind: "capability", detail: "send pitch", agent: "researcher", capability: "send_communication" });
   assert.throws(() => permissions.resolve(s, a.id, true, ""), /note/);
-  process.env.BRAINIVERSE_AGENT = "lumen";
+  process.env.BRAINIVERSE_AGENT = "researcher";
   try {
     assert.throws(() => permissions.resolve(s, a.id, true, "I approve myself"), /cannot run/);
   } finally {
@@ -54,8 +54,8 @@ test("approvals: need a human note; agents cannot resolve them", () => {
   }
   permissions.resolve(s, a.id, true, "User: yes");
   assert.throws(() => permissions.resolve(s, a.id, false, "changed my mind"), /already/);
-  assert.equal(permissions.check(s, "lumen", "web_search"), "allowed");
-  assert.equal(permissions.check(s, "lumen", "spend_money"), "denied");
+  assert.equal(permissions.check(s, "researcher", "web_search"), "allowed");
+  assert.equal(permissions.check(s, "researcher", "spend_money"), "denied");
 });
 
 function fakeSkill(dir, body, name = "fake-skill") {
@@ -77,8 +77,8 @@ test("scan flags dangerous skills and passes benign ones", () => {
 test("skill lifecycle: candidate needs a real source, approval gates install, verify checks files", () => {
   const s = missionState();
   const gap = skills.addGap(s, "slides", "need decks");
-  assert.throws(() => skills.addCandidate(s, { name: "made-up", source: "?", purpose: "x", agent: "lumen" }), /actually found/);
-  const c = skills.addCandidate(s, { name: "deck", source: "github", url: "https://github.com/x/deck", purpose: "slides", agent: "lumen", gap: gap.id });
+  assert.throws(() => skills.addCandidate(s, { name: "made-up", source: "?", purpose: "x", agent: "researcher" }), /actually found/);
+  const c = skills.addCandidate(s, { name: "deck", source: "github", url: "https://github.com/x/deck", purpose: "slides", agent: "researcher", gap: gap.id });
   assert.throws(() => skills.verify(s, c.id, tmpdir()), /approved/);
   const wrong = permissions.request(s, { kind: "skill_install", detail: "other", skill: "S9" });
   permissions.resolve(s, wrong.id, true, "yes");
@@ -91,13 +91,13 @@ test("skill lifecycle: candidate needs a real source, approval gates install, ve
   const installed = fakeSkill(path.join(tmpdir(), "deck"), "Deck instructions", "deck");
   skills.verify(s, c.id, installed);
   assert.equal(s.skills.candidates[c.id].status, "integrated");
-  assert.ok(s.team.agents.find((x) => x.id === "lumen").skills.includes("deck"));
+  assert.ok(s.team.agents.find((x) => x.id === "researcher").skills.includes("deck"));
   assert.equal(s.skills.gaps[gap.id].status, "covered");
 });
 
 test("high-risk candidates are never recommended or approved; max 3 recommendations", () => {
   const s = missionState();
-  for (let i = 0; i < 5; i++) skills.addCandidate(s, { name: `s${i}`, source: "github", url: `https://e/${i}`, purpose: "p", agent: "lumen" });
+  for (let i = 0; i < 5; i++) skills.addCandidate(s, { name: `s${i}`, source: "github", url: `https://e/${i}`, purpose: "p", agent: "researcher" });
   skills.recordScan(s, "S1", { risk: "high", findings: [{}], path: "/x", scripts: [] });
   skills.recordScan(s, "S2", { risk: "low", findings: [], path: "/y", scripts: [] });
   const recs = skills.recommend(s);
@@ -118,18 +118,18 @@ test("local inventory reads installed skills", () => {
 
 test("reviews need evidence; failing reviews need issues; metrics add up", () => {
   const s = missionState();
-  o.addTask(s, { objective: "a", agent: "lumen" });
+  o.addTask(s, { objective: "a", agent: "researcher" });
   assert.throws(() => evaluation.addReview(s, "T1", "pass", ["looked"]), /nothing to review/);
   o.startTask(s, "T1");
   o.submit(s, "T1", result(["x"], { evidence: ["src"] }), { tokens: 120 });
   assert.throws(() => evaluation.addReview(s, "T1", "pass", []), /evidence/);
   assert.throws(() => evaluation.addReview(s, "T1", "fail", ["checked"]), /issues/);
-  evaluation.addReview(s, "T1", "pass_with_issues", ["checked sources"], ["one stale link"], "sentinel");
+  evaluation.addReview(s, "T1", "pass_with_issues", ["checked sources"], ["one stale link"], "reviewer");
   o.accept(s, "T1");
   const metrics = evaluation.metrics(s);
   assert.equal(metrics.tasks_done, 1);
   assert.equal(metrics.first_pass_acceptance, 1);
   assert.equal(metrics.tokens, 120);
   assert.equal(metrics.results_with_sources, 1);
-  assert.ok(metrics.idle_team_members.includes("penny"));
+  assert.ok(metrics.idle_team_members.includes("budget-analyst"));
 });

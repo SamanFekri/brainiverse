@@ -40,6 +40,7 @@ create an agent
 - `--archetype <value>` — required
 - `--id <value>`
 - `--name <value>`
+- `--position <value>` — shown in brackets, e.g. Budget Analyst
 - `--set <value>` — field=value (lists: a;b;c); repeatable
 
 ### `brainiverse agent import <path>`
@@ -150,7 +151,7 @@ create a team from a template
 import a team JSON file
 
 ### `brainiverse team show <team_ref>`
-show a team
+show a team (team id, @project or @mission)
 
 - `--mission <value>` — mission id (default: the active mission)
 
@@ -166,6 +167,7 @@ add an agent
 - `--archetype <value>` — default: specialist
 - `--id <value>`
 - `--name <value>`
+- `--position <value>` — shown in brackets, e.g. Visa Expert
 - `--description <value>`
 - `--expertise <value>` — comma-separated
 - `--from-library <value>` — add a saved agent from the library
@@ -207,10 +209,10 @@ delete a saved team
 start and manage missions
 
 ### `brainiverse mission new`
-start a mission
+start a mission (team defaults to the project team)
 
 - `--goal <value>` — required
-- `--team <value>` — required
+- `--team <value>`
 - `--id <value>`
 - `--title <value>`
 - `--success <value>` — repeatable
@@ -363,6 +365,34 @@ attach an approval to a task
 
 ### `brainiverse task sweep`
 fail tasks that exceeded their timeout
+
+- `--mission <value>` — mission id (default: the active mission)
+
+### `brainiverse intake [request]`
+decide how to handle a request: answer, quick team, new or existing project team
+
+## project
+
+the project's long-lived team (written to .claude/agents/)
+
+### `brainiverse project status`
+show the project team and its Claude Code agent files
+
+### `brainiverse project adopt <team>`
+make a team this project's team and write its agents
+
+- `--force`
+
+### `brainiverse project sync`
+rewrite .claude/agents/ from the project team
+
+### `brainiverse project release`
+stop using a project team (removes its generated agent files)
+
+- `--keep-files`
+
+### `brainiverse ask <agent> <message>`
+talk to one agent: a question or a further request (opens or reuses a direct line)
 
 - `--mission <value>` — mission id (default: the active mission)
 

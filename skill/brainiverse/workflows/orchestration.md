@@ -2,7 +2,7 @@
 
 ## Plan
 Decompose the goal into tasks. Each task gets:
-- one owner (`--agent`) and one clear `--objective`
+- one owner (`--agent`, an id or a name like `babak`) and one clear `--objective`
 - `--input` items and `--expect` (what the output should look like)
 - `--accept` criteria you can actually check (repeatable)
 - `--after T1,T2` only for real dependencies
@@ -10,10 +10,10 @@ Decompose the goal into tasks. Each task gets:
 - optional `--constraint`, `--context`, `--timeout <s>`, `--retries <n>`, `--parent T#` (sub-delegation)
 
 ```bash
-bv task add --agent lumen --objective "Shortlist 4 regions for 14 days in April" \
+bv task add --agent shirin --objective "Shortlist 4 regions for 14 days in April" \
   --accept "each region has 2+ sources" --accept "notes cherry-blossom timing"
-bv task add --agent penny --objective "Estimate daily costs per region" --accept "low/expected/high"
-bv task add --agent navigator --objective "Draft a day-by-day itinerary" --after T1,T2 --accept "fits budget"
+bv task add --agent babak --objective "Estimate daily costs per region" --accept "low/expected/high"
+bv task add --agent olivia --objective "Draft a day-by-day itinerary" --after T1,T2 --accept "fits budget"
 ```
 
 ## Run
@@ -38,7 +38,7 @@ When the calls return:
 - `bv task revise T# --feedback "..."` — back to pending with your feedback in the brief; bounded by
   `max_iterations`. Hitting the limit means: escalate to the human, don't loop.
 - High-stakes output → add a review task for the Quality Reviewer with `--after T#`, and record its verdict:
-  `bv review T# --verdict pass_with_issues --evidence "..." --issue "..." --reviewer sentinel`.
+  `bv review T# --verdict pass_with_issues --evidence "..." --issue "..." --reviewer parisa`.
 
 ## Limits (per mission; `bv mission update --limit key=value` with the human's agreement)
 | Limit | Default | Prevents |

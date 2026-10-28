@@ -70,7 +70,7 @@ export function nextId(prefix, existing) {
   return `${prefix}${max + 1}`;
 }
 
-export const DEFAULT_CONFIG = { theme: "heroes", terminology: "themed", active_mission: null, host: "claude-code" };
+export const DEFAULT_CONFIG = { theme: "people", terminology: "themed", active_mission: null, host: "claude-code", project_team: null };
 
 export class Workspace {
   constructor(root) {
@@ -99,7 +99,9 @@ export class Workspace {
   }
 
   config() {
-    return { ...DEFAULT_CONFIG, ...(readJson(this.path("config.json"), {}) || {}) };
+    const config = { ...DEFAULT_CONFIG, ...(readJson(this.path("config.json"), {}) || {}) };
+    if (config.theme === "avengers" || config.theme === "classic") config.theme = "people"; // removed themes
+    return config;
   }
 
   setConfig(values) {

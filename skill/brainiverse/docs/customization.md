@@ -1,13 +1,15 @@
 # Customization
 
-Every command below works on the **agent library** by default, on a saved team with `--team <id>`, or on
-the running mission's team with `--team @mission`.
+Every command below works on the **agent library** by default, on a saved team with `--team <id>`, on the
+project team with `--team @project` (its `.claude/agents/` files re-sync automatically), or on the running
+mission's team with `--team @mission`. Agents can be referenced by id (`budget-analyst`) or name (`babak`).
 
 ## Agent profile
 | Field | Meaning | Edit with |
 |---|---|---|
 | id | stable unique id | fixed (duplicate to change) |
 | name, personality, communication_style, avatar | identity | `agent rename` |
+| position | shown in brackets: Babak (Budget Analyst) | `agent edit --set position=...` |
 | archetype | role template | fixed (create a new agent instead) |
 | description, instructions, input_format, output_format, collaboration, role_file | behaviour | `agent edit --set field=value` |
 | responsibilities, expertise, decision_rules, skills | lists | `--set field="a;b;c"`, `--add field=x`, `--remove field=x` |
@@ -19,14 +21,14 @@ the running mission's team with `--team @mission`.
 
 Renaming never changes responsibilities or permissions:
 ```bash
-bv agent rename lumen --team @mission --name Sherlock --personality "Deductive, dry-witted"
+bv agent rename shirin --team @project --name Sherlock --personality "Deductive, dry-witted"
 ```
 
 ## Create agents
 ```bash
-bv agent new --archetype specialist --id visa-wizard --name "Visa Wizard" \
+bv agent new --archetype specialist --id visa-wizard --name "Leila" --position "Visa Expert" \
   --set "expertise=visas;entry rules" --set "instructions=Always cite the official government page"
-bv agent duplicate visa-wizard visa-wizard-eu --name "Schengen Sage"
+bv agent duplicate visa-wizard visa-wizard-eu --name "Nina"
 bv agent export visa-wizard --out visa-wizard.agent.json
 bv agent import visa-wizard.agent.json            # gated capabilities are stripped on import
 bv agent test visa-wizard --task "What does a US citizen need to visit Japan for 14 days?"
@@ -40,9 +42,9 @@ bv agent test visa-wizard --task "What does a US citizen need to visit Japan for
 - **external / destructive / financial** (`repo_push`, `external_api`, `send_communication`,
   `calendar_write`, `install_skill`, `delete_data`, `spend_money`): need a human approval:
   ```bash
-  bv approval request --capability send_communication --agent echo --detail "Let Echo send the pitch email to Ana"
+  bv approval request --capability send_communication --agent dariush --detail "Let Dariush send the pitch email to Ana"
   bv approval resolve A1 approve --note "User: 'yes, send it to Ana only'"
-  bv agent grant echo send_communication --team @mission --approval A1
+  bv agent grant dariush send_communication --team @mission --approval A1
   ```
   And each task that *uses* a gated capability declares it (`--needs send_communication`) and needs its own
   approval attached (`task attach-approval T# A2`). Approvals are single-use.
@@ -51,9 +53,9 @@ bv agent test visa-wizard --task "What does a US citizen need to visit Japan for
 ```bash
 bv team templates
 bv team from-template discovery-crew --id idea-check
-bv team add idea-check --archetype communicator --name Echo
-bv team remove idea-check spark
-bv team leader idea-check sherlock      # the main session then speaks as Sherlock
+bv team add idea-check --archetype communicator --name "Dariush" --position "Pitch Coach"
+bv team remove idea-check jake
+bv team leader idea-check "Madison"   # the main session then speaks as Madison (Market Researcher)
 bv team rename idea-check "Idea Lab"
 bv team save @mission --as my-favourite-squad
 bv team export idea-check --out idea-check.team.json
@@ -62,12 +64,21 @@ bv team import idea-check.team.json
 
 ## Themes and terminology
 ```bash
-bv themes                               # heroes (default) · classic · professional
-bv config theme professional            # new agents get plain role names
+bv themes                               # people (default) · heroes · professional
+bv config theme heroes                  # superhero-style names (Lumen, Spark, Sentinel…)
+bv config theme professional            # positions only: "Budget Analyst", no nickname
 bv config terminology professional      # Team/Project/Meeting instead of Squad/Mission/War Room
 ```
-The `classic` theme uses the nicknames from the original spec. They echo comic-book characters, so keep it
-for personal use. The default `heroes` theme is original and safe to share.
+A theme applies to agents created after you switch; rename existing ones with `agent rename`.
+
+## Project teams
+```bash
+bv project adopt <team>     # make it this project's team; writes .claude/agents/brainiverse-<id>.md
+bv project status           # roster and agent files
+bv project sync             # rewrite the agent files (automatic after team/agent changes)
+bv project release          # stop using it; removes only the files brainiverse generated
+```
+Files you wrote yourself in `.claude/agents/` are never overwritten or deleted.
 
 To add your own theme or template, edit `runtime/data/themes.json` or add a file to
 `runtime/data/templates/` (same shape as the existing ones). To teach the team builder a new domain, add an

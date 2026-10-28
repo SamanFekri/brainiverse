@@ -141,6 +141,12 @@ propose a team for a mission
 
 - `--max <n>`
 - `--id <value>`
+- `--capabilities <value>` — your own analysis, comma-separated: research, ideation, analysis, build, risk, comms, organize
+- `--domains <value>` — your own analysis, comma-separated domain ids (see `domains`)
+- `--complexity <value>` — small | medium | large
+
+### `brainiverse team domains`
+list the domains the team builder knows, with their specialists
 
 ### `brainiverse team from-template <template>`
 create a team from a template
@@ -395,6 +401,34 @@ stop using a project team (removes its generated agent files)
 talk to one agent: a question or a further request (opens or reuses a direct line)
 
 - `--mission <value>` — mission id (default: the active mission)
+
+## usage
+
+token usage and cost, from what the host reports
+
+### `brainiverse usage record <task_id>`
+record the usage an Agent result reported
+
+- `--mission <value>` — mission id (default: the active mission)
+- `--tokens <n>`
+- `--tool-uses <n>`
+- `--duration-ms <n>`
+- `--invocation <value>`
+
+### `brainiverse usage report`
+usage by agent and model tier, with cost if prices are set
+
+- `--mission <value>` — mission id (default: the active mission)
+
+### `brainiverse usage price <tier> <usd_per_mtok>`
+set your price for a model tier (USD per million tokens)
+
+### `brainiverse dashboard`
+read-only web dashboard: board, team, meetings, approvals, usage
+
+- `--mission <value>` — mission id (default: the active mission)
+- `--port <n>` — default 4777; 0 picks a free port
+- `--out <value>` — write a static snapshot HTML file instead
 
 ### `brainiverse status`
 progress board

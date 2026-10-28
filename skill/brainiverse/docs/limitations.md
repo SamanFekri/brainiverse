@@ -20,7 +20,8 @@
   Leader.
 - **Timeouts are bookkeeping.** `task sweep` marks overdue tasks failed; stopping a running subagent needs
   Claude Code's TaskStop.
-- **Token budgets are opt-in.** The runtime counts tokens only when `--tokens` is passed on submit.
+- **Usage is recorded by the Leader.** Token counts come from what the host reports for each Agent run
+  (`usage record`); if the Leader skips it, budgets and costs undercount.
 - **Team proposals and intake start from keywords.** `team propose` and `intake` use deterministic keyword/domain matching so they're
   predictable and testable; the Leader is expected to refine the roster with judgment.
 - **Skill discovery depends on the environment.** Searching needs web or `npx skills` access; installing
@@ -31,10 +32,25 @@
 - **One machine, one user.** Missions are isolated from each other by directory and lock, but there's no
   multi-user authentication.
 
+## Built since the first release
+- **PreToolUse guard** (`hooks/guard.mjs`): registered in every project agent's file. It blocks writes to
+  `.brainiverse/` and `.claude/`, tools outside the agent's capabilities, MCP tools without `external_api`, and
+  risky Bash commands (push, delete, publish/deploy, skill installs, sending mail) unless the agent holds that
+  capability and its current task has a human approval. It fails open on unreadable input so a bug can't block all
+  work. It's pattern-based: a determined agent could still disguise a command.
+- **LLM-assisted capability mapping**: the Leader is an LLM, so `team propose` accepts its own analysis
+  (`--capabilities`, `--domains`, `--complexity`), validated by the runtime.
+- **More templates and domains**: Learning Lab, Launch Team and Life Ops, plus health, personal finance, events,
+  career, legal research and home domains, each with kickoff questions.
+- **Web dashboard**: `brainiverse dashboard` (live, read-only, localhost) or `--out` for a static snapshot.
+- **Host adapters**: `claude-agent-sdk` (AgentDefinitions) and `generic`, next to `claude-code`.
+- **Cost tracking**: `usage record` stores what the host reports for each Agent run; `usage report` breaks it down
+  by agent and model tier, with cost for tiers you price. There's no built-in price list: prices change, so you set them.
+
 ## Future improvements
-- A hook (`PreToolUse`) that checks subagent tool calls against their recorded capabilities.
-- LLM-assisted capability mapping as an option next to the keyword analyzer.
-- More templates (Learning Lab, Launch Team, Life Ops) and more domains.
-- A small web dashboard over `.brainiverse/` (board, meetings, approvals).
-- Adapters for other hosts (Claude Agent SDK, other CLIs) via `TOOL_ADAPTERS` / `MODEL_ADAPTERS`.
-- Cost tracking from the host's usage reports instead of opt-in token counts.
+- Guard coverage for quick-team (general-purpose) agents, e.g. a session-level hook that maps subagent
+  invocations to Brainiverse agents.
+- Automatic usage capture (a PostToolUse hook on the Agent tool) instead of the Leader recording it.
+- Write actions in the dashboard (approve, accept, cancel) behind a local confirmation.
+- Shared team libraries: import teams and templates from a URL or repository.
+- More languages for kickoff questions and agent replies.

@@ -1,0 +1,112 @@
+{
+  "id": "learning-lab",
+  "name": "Learning Lab",
+  "description": "Learns a new subject: a learning path, resources, practice, and checks of understanding.",
+  "doc": "teams/learning-lab.md",
+  "agents": [
+    {
+      "id": "leader",
+      "archetype": "leader",
+      "position": "Leader",
+      "names": {
+        "people": "Captain",
+        "heroes": "Captain",
+        "professional": "Leader"
+      },
+      "description": "Leads the learning plan and talks to the human."
+    },
+    {
+      "id": "mentor",
+      "archetype": "specialist",
+      "position": "Mentor",
+      "names": {
+        "people": "Rachel",
+        "heroes": "Mentor",
+        "professional": "Mentor"
+      },
+      "description": "Designs the learning path and explains concepts.",
+      "expertise": [
+        "curriculum design",
+        "pedagogy",
+        "learning paths"
+      ]
+    },
+    {
+      "id": "researcher",
+      "archetype": "researcher",
+      "position": "Resource Finder",
+      "names": {
+        "people": "Shirin",
+        "heroes": "Lumen",
+        "professional": "Resource Finder"
+      },
+      "description": "Finds the best courses, books, videos and docs.",
+      "expertise": [
+        "learning resources",
+        "source quality"
+      ]
+    },
+    {
+      "id": "practice-designer",
+      "archetype": "executor",
+      "position": "Practice Designer",
+      "names": {
+        "people": "Kyle",
+        "heroes": "Forge",
+        "professional": "Practice Designer"
+      },
+      "description": "Builds exercises, projects and flashcards.",
+      "expertise": [
+        "exercises",
+        "projects",
+        "spaced repetition"
+      ],
+      "capabilities": [
+        "file_read",
+        "file_write"
+      ]
+    },
+    {
+      "id": "organizer",
+      "archetype": "organizer",
+      "position": "Study Planner",
+      "names": {
+        "people": "Sarah",
+        "heroes": "Atlas",
+        "professional": "Study Planner"
+      },
+      "description": "Turns the path into a weekly schedule.",
+      "expertise": [
+        "study schedules",
+        "habits"
+      ]
+    },
+    {
+      "id": "reviewer",
+      "archetype": "quality_reviewer",
+      "position": "Quiz Master",
+      "names": {
+        "people": "Parisa",
+        "heroes": "Sentinel",
+        "professional": "Quiz Master"
+      },
+      "description": "Checks understanding with quizzes and reviews answers.",
+      "expertise": [
+        "assessment",
+        "feedback"
+      ]
+    }
+  ],
+  "workflow": [
+    "Kickoff: level, goal, time per week, preferred formats",
+    "Design the learning path",
+    "Find resources for each stage (in parallel)",
+    "Build practice for each stage",
+    "Schedule it week by week",
+    "Quiz and adjust as the human progresses"
+  ],
+  "leader": "leader",
+  "notes": [
+    "Works well as a **project team** in a study folder: the same crew picks up where you left off each session."
+  ]
+}

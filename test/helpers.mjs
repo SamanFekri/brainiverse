@@ -44,8 +44,9 @@ export function cli(home, args, { input, agent, env = {} } = {}) {
 
 /** Run the CLI asynchronously (for concurrency tests). */
 export function cliAsync(home, args, { input, agent } = {}) {
-  return new Promise((resolve) => {
-    const child = spawn(process.execPath, [CLI, ...args], {
+  let child;
+  const done = new Promise((resolve) => {
+    child = spawn(process.execPath, [CLI, ...args], {
       env: { ...process.env, BRAINIVERSE_HOME: home, BRAINIVERSE_AGENT: agent ?? "", BRAINIVERSE_MISSION: "" },
     });
     let out = "";
@@ -56,6 +57,8 @@ export function cliAsync(home, args, { input, agent } = {}) {
     if (input !== undefined) child.stdin.end(input);
     else child.stdin.end();
   });
+  done.child = child; // for long-running commands (the dashboard server)
+  return done;
 }
 
 /** Stand-in for a subagent: fetch the brief, then submit a result as that agent. */

@@ -1,0 +1,126 @@
+{
+  "id": "launch-team",
+  "name": "Launch Team",
+  "description": "Launches a product or project: positioning, launch plan, copy, channels, and a risk check.",
+  "doc": "teams/launch-team.md",
+  "agents": [
+    {
+      "id": "leader",
+      "archetype": "leader",
+      "position": "Leader",
+      "names": {
+        "people": "Captain",
+        "heroes": "Captain",
+        "professional": "Leader"
+      },
+      "description": "Leads the launch."
+    },
+    {
+      "id": "market-researcher",
+      "archetype": "researcher",
+      "position": "Market Researcher",
+      "names": {
+        "people": "Madison",
+        "heroes": "Sherlock",
+        "professional": "Market Researcher"
+      },
+      "description": "Researches the audience and competitors.",
+      "expertise": [
+        "market research",
+        "competitor analysis"
+      ]
+    },
+    {
+      "id": "marketer",
+      "archetype": "specialist",
+      "position": "Marketing Strategist",
+      "names": {
+        "people": "Jessica",
+        "heroes": "Megaphone",
+        "professional": "Marketing Strategist"
+      },
+      "description": "Plans positioning, channels and timing.",
+      "expertise": [
+        "positioning",
+        "channels",
+        "launch timing"
+      ]
+    },
+    {
+      "id": "copywriter",
+      "archetype": "communicator",
+      "position": "Copywriter",
+      "names": {
+        "people": "Dariush",
+        "heroes": "Echo",
+        "professional": "Copywriter"
+      },
+      "description": "Writes the launch copy: page, posts, emails.",
+      "expertise": [
+        "copywriting",
+        "announcements"
+      ]
+    },
+    {
+      "id": "creative",
+      "archetype": "creative_thinker",
+      "position": "Creative Thinker",
+      "names": {
+        "people": "Jake",
+        "heroes": "Spark",
+        "professional": "Creative Thinker"
+      },
+      "description": "Finds the hook and the angles."
+    },
+    {
+      "id": "organizer",
+      "archetype": "organizer",
+      "position": "Launch Coordinator",
+      "names": {
+        "people": "Sarah",
+        "heroes": "Atlas",
+        "professional": "Launch Coordinator"
+      },
+      "description": "Runs the launch checklist and timeline.",
+      "expertise": [
+        "launch checklists",
+        "timelines"
+      ]
+    },
+    {
+      "id": "challenger",
+      "archetype": "challenger",
+      "position": "Challenger",
+      "names": {
+        "people": "Neda",
+        "heroes": "Riddle",
+        "professional": "Challenger"
+      },
+      "description": "Stress-tests the plan and the claims."
+    },
+    {
+      "id": "reviewer",
+      "archetype": "quality_reviewer",
+      "position": "Quality Reviewer",
+      "names": {
+        "people": "Parisa",
+        "heroes": "Sentinel",
+        "professional": "Quality Reviewer"
+      },
+      "description": "Checks every claim, link and detail before launch."
+    }
+  ],
+  "workflow": [
+    "Kickoff: product, audience, launch date, channels, budget",
+    "Research audience and competitors",
+    "Positioning and the hook",
+    "Launch plan and timeline",
+    "Copy for every channel",
+    "Challenge the plan; fix weak claims",
+    "Final review; nothing is posted or sent without approval"
+  ],
+  "leader": "leader",
+  "notes": [
+    "Nothing is posted, published or sent without `send_communication` / `external_api` and an approval for that specific post."
+  ]
+}

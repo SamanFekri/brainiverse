@@ -106,8 +106,41 @@ export function kickoffQuestions(text, { mode = "quick_team", domains } = {}) {
   };
 }
 
-export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAgents, teamId } = {}) {
-  const analysis = analyzeMission(missionText);
+export const COMPLEXITIES = ["small", "medium", "large"];
+
+/**
+ * Merge the Leader's own reading of the mission (it is an LLM) over the keyword analysis.
+ * Only the fields it supplies are replaced; everything is validated against known values.
+ */
+export function leaderAnalysis(base, { capabilities, domains, complexity } = {}) {
+  const data = loadData("domains.json");
+  const knownCaps = [...Object.keys(data.capability_signals), "review"];
+  const analysis = { ...base, assumptions: [...base.assumptions], source: "keywords" };
+  if (capabilities) {
+    const bad = capabilities.filter((c) => !knownCaps.includes(c));
+    if (bad.length) throw new BrainiverseError(`unknown capabilities ${bad.join(", ")}; known: ${knownCaps.join(", ")}`);
+    analysis.capabilities = capabilities.filter((c) => c !== "review");
+    analysis.source = "leader";
+  }
+  if (domains) {
+    const bad = domains.filter((d) => !(d in data.domains));
+    if (bad.length) throw new BrainiverseError(`unknown domains ${bad.join(", ")}; known: ${Object.keys(data.domains).join(", ")}`);
+    analysis.domains = domains;
+    analysis.source = "leader";
+  }
+  if (complexity) {
+    if (!COMPLEXITIES.includes(complexity)) throw new BrainiverseError(`complexity must be one of ${COMPLEXITIES.join(", ")}`);
+    analysis.complexity = complexity;
+    analysis.source = "leader";
+  }
+  if (analysis.source === "leader") {
+    analysis.assumptions = analysis.assumptions.filter((a) => !a.startsWith("No clear signals") && !a.startsWith("No specific domain"));
+  }
+  return analysis;
+}
+
+export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAgents, teamId, analysis: override } = {}) {
+  const analysis = leaderAnalysis(analyzeMission(missionText), override);
   const domainsData = loadData("domains.json").domains;
   const lowered = missionText.toLowerCase();
   const members = []; // { tag, profile, reason }

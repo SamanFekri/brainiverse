@@ -1363,6 +1363,661 @@
           ]
         }
       ]
+    },
+    "health": {
+      "label": "Health and fitness",
+      "keywords": [
+        "fitness",
+        "workout",
+        "gym",
+        "marathon",
+        "lose weight",
+        "diet",
+        "nutrition",
+        "healthier",
+        "sleep better",
+        "exercise",
+        "muscle",
+        "yoga",
+        "meal plan",
+        "training plan"
+      ],
+      "needs": [
+        "research",
+        "build"
+      ],
+      "specialists": [
+        {
+          "id": "fitness-coach",
+          "position": "Fitness Coach",
+          "names": {
+            "people": "Derek",
+            "heroes": "Pulse",
+            "professional": "Fitness Coach"
+          },
+          "archetype": "specialist",
+          "expertise": [
+            "training plans",
+            "progression",
+            "injury prevention"
+          ],
+          "description": "Designs training plans.",
+          "covers": [
+            "build"
+          ]
+        },
+        {
+          "id": "nutritionist",
+          "position": "Nutrition Planner",
+          "names": {
+            "people": "Nicole",
+            "heroes": "Ember",
+            "professional": "Nutrition Planner"
+          },
+          "archetype": "specialist",
+          "expertise": [
+            "meal planning",
+            "macros",
+            "dietary restrictions"
+          ],
+          "description": "Plans meals and nutrition.",
+          "when": [
+            "diet",
+            "nutrition",
+            "meal",
+            "weight",
+            "eat",
+            "food"
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "goal",
+          "header": "Goal",
+          "question": "What's the main goal?",
+          "options": [
+            "Lose weight",
+            "Build strength",
+            "Endurance (e.g. a race)",
+            "Feel healthier overall"
+          ],
+          "answered_if": [
+            "lose weight",
+            "strength",
+            "marathon",
+            "race",
+            "muscle"
+          ]
+        },
+        {
+          "id": "level",
+          "header": "Level",
+          "question": "Current activity level?",
+          "options": [
+            "Mostly inactive",
+            "Active now and then",
+            "Train regularly",
+            "Very experienced"
+          ]
+        },
+        {
+          "id": "time",
+          "header": "Time",
+          "question": "How much time per week?",
+          "options": [
+            "Under 2 hours",
+            "2-4 hours",
+            "4-7 hours",
+            "More than 7"
+          ]
+        },
+        {
+          "id": "equipment",
+          "header": "Equipment",
+          "question": "What can you use?",
+          "options": [
+            "Gym",
+            "Home equipment",
+            "Bodyweight only",
+            "Outdoors"
+          ],
+          "multi": true
+        },
+        {
+          "id": "limits",
+          "header": "Limits",
+          "question": "Any injuries, conditions or dietary limits the plan must respect? (free text; not medical advice)"
+        }
+      ]
+    },
+    "finance": {
+      "label": "Personal finance",
+      "keywords": [
+        "savings",
+        "saving money",
+        "investing",
+        "retirement",
+        "debt",
+        "mortgage",
+        "taxes",
+        "tax return",
+        "personal finance",
+        "financial plan",
+        "my money",
+        "net worth",
+        "invest in",
+        "investments",
+        "stocks",
+        "index fund"
+      ],
+      "needs": [
+        "analysis",
+        "research"
+      ],
+      "specialists": [
+        {
+          "id": "financial-planner",
+          "position": "Financial Planner",
+          "names": {
+            "people": "Steven",
+            "heroes": "Ledger",
+            "professional": "Financial Planner"
+          },
+          "archetype": "analyst",
+          "expertise": [
+            "budgeting",
+            "saving",
+            "debt payoff"
+          ],
+          "description": "Builds budgets and savings plans.",
+          "covers": [
+            "analysis"
+          ]
+        },
+        {
+          "id": "tax-researcher",
+          "position": "Tax Researcher",
+          "names": {
+            "people": "Kimberly",
+            "heroes": "Abacus",
+            "professional": "Tax Researcher"
+          },
+          "archetype": "researcher",
+          "expertise": [
+            "tax rules",
+            "deductions"
+          ],
+          "description": "Researches tax rules that apply.",
+          "when": [
+            "tax",
+            "taxes",
+            "deduction",
+            "irs"
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "goal",
+          "header": "Goal",
+          "question": "What's the main money goal?",
+          "options": [
+            "Budget and spend better",
+            "Pay off debt",
+            "Save for something",
+            "Invest for the long term"
+          ],
+          "answered_if": [
+            "debt",
+            "save",
+            "invest",
+            "retire",
+            "budget"
+          ]
+        },
+        {
+          "id": "horizon",
+          "header": "Horizon",
+          "question": "Over what time frame?",
+          "options": [
+            "Next few months",
+            "1-3 years",
+            "5+ years"
+          ]
+        },
+        {
+          "id": "risk",
+          "header": "Risk",
+          "question": "How much risk is OK?",
+          "options": [
+            "As little as possible",
+            "Some, for better returns",
+            "Comfortable with risk"
+          ]
+        },
+        {
+          "id": "country",
+          "header": "Country",
+          "question": "Which country are your finances in (rules differ)? (free text; information, not financial advice)"
+        }
+      ]
+    },
+    "events": {
+      "label": "Event planning",
+      "keywords": [
+        "wedding",
+        "party",
+        "birthday",
+        "conference",
+        "celebration",
+        "anniversary",
+        "baby shower",
+        "reunion",
+        "meetup",
+        "gala"
+      ],
+      "needs": [
+        "research",
+        "organize",
+        "analysis"
+      ],
+      "specialists": [
+        {
+          "id": "event-planner",
+          "position": "Event Planner",
+          "names": {
+            "people": "Heather",
+            "heroes": "Gala",
+            "professional": "Event Planner"
+          },
+          "archetype": "specialist",
+          "expertise": [
+            "event planning",
+            "timelines",
+            "run of show"
+          ],
+          "description": "Plans the event end to end.",
+          "covers": [
+            "organize",
+            "build"
+          ]
+        },
+        {
+          "id": "vendor-scout",
+          "position": "Vendor Scout",
+          "names": {
+            "people": "Kourosh",
+            "heroes": "Scout",
+            "professional": "Vendor Scout"
+          },
+          "archetype": "researcher",
+          "expertise": [
+            "venues",
+            "catering",
+            "vendors"
+          ],
+          "description": "Finds and compares venues and vendors."
+        }
+      ],
+      "questions": [
+        {
+          "id": "guests",
+          "header": "Guests",
+          "question": "How many guests?",
+          "options": [
+            "Under 20",
+            "20-50",
+            "50-150",
+            "More than 150"
+          ]
+        },
+        {
+          "id": "date",
+          "header": "Date",
+          "question": "Is the date fixed?",
+          "options": [
+            "Fixed date",
+            "A few options",
+            "Flexible"
+          ],
+          "answered_if": [
+            "january",
+            "february",
+            "march",
+            "april",
+            "may",
+            "june",
+            "july",
+            "august",
+            "september",
+            "october",
+            "november",
+            "december"
+          ]
+        },
+        {
+          "id": "budget",
+          "header": "Budget",
+          "question": "Budget level?",
+          "options": [
+            "Tight",
+            "Moderate",
+            "Generous"
+          ],
+          "answered_if": [
+            "€",
+            "$",
+            "£",
+            "budget"
+          ]
+        },
+        {
+          "id": "vibe",
+          "header": "Vibe",
+          "question": "What feel are you after? (free text)"
+        }
+      ]
+    },
+    "career": {
+      "label": "Career and job search",
+      "keywords": [
+        "job search",
+        "career",
+        "resume",
+        "cv",
+        "job interview",
+        "interview prep",
+        "promotion",
+        "salary",
+        "cover letter",
+        "linkedin",
+        "new job"
+      ],
+      "needs": [
+        "research",
+        "build",
+        "comms"
+      ],
+      "specialists": [
+        {
+          "id": "career-coach",
+          "position": "Career Coach",
+          "names": {
+            "people": "Melissa",
+            "heroes": "Compass",
+            "professional": "Career Coach"
+          },
+          "archetype": "specialist",
+          "expertise": [
+            "job search",
+            "interview prep",
+            "negotiation"
+          ],
+          "description": "Plans the job search and interview prep."
+        },
+        {
+          "id": "resume-writer",
+          "position": "Resume Writer",
+          "names": {
+            "people": "Eric",
+            "heroes": "Quill",
+            "professional": "Resume Writer"
+          },
+          "archetype": "communicator",
+          "expertise": [
+            "resumes",
+            "cover letters",
+            "LinkedIn"
+          ],
+          "description": "Writes and tailors resumes and letters.",
+          "covers": [
+            "comms"
+          ],
+          "when": [
+            "resume",
+            "cv",
+            "cover letter",
+            "linkedin",
+            "application"
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "target",
+          "header": "Target",
+          "question": "What kind of role are you going for? (free text)"
+        },
+        {
+          "id": "stage",
+          "header": "Stage",
+          "question": "Where are you in the search?",
+          "options": [
+            "Just starting",
+            "Applying now",
+            "Interviewing",
+            "Negotiating an offer"
+          ]
+        },
+        {
+          "id": "materials",
+          "header": "Materials",
+          "question": "What do you have ready?",
+          "options": [
+            "Resume / CV",
+            "Cover letter",
+            "LinkedIn profile",
+            "Portfolio"
+          ],
+          "multi": true
+        },
+        {
+          "id": "location",
+          "header": "Location",
+          "question": "Location preference?",
+          "options": [
+            "Remote",
+            "Hybrid",
+            "On-site",
+            "Open to relocating"
+          ],
+          "multi": true
+        }
+      ]
+    },
+    "legal": {
+      "label": "Legal research",
+      "keywords": [
+        "legal",
+        "law",
+        "contract",
+        "lease",
+        "my rights",
+        "lawsuit",
+        "terms of service",
+        "privacy policy",
+        "gdpr",
+        "copyright",
+        "trademark"
+      ],
+      "needs": [
+        "research",
+        "analysis",
+        "risk"
+      ],
+      "specialists": [
+        {
+          "id": "legal-researcher",
+          "position": "Legal Researcher",
+          "names": {
+            "people": "Bahar",
+            "heroes": "Statute",
+            "professional": "Legal Researcher"
+          },
+          "archetype": "researcher",
+          "expertise": [
+            "legal research",
+            "plain-language summaries"
+          ],
+          "description": "Researches laws and explains them in plain language (not legal advice).",
+          "covers": [
+            "research"
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "jurisdiction",
+          "header": "Jurisdiction",
+          "question": "Which country / state's law applies? (free text)"
+        },
+        {
+          "id": "need",
+          "header": "Need",
+          "question": "What do you need?",
+          "options": [
+            "Understand my rights",
+            "Review a document",
+            "Compare options",
+            "Prepare questions for a lawyer"
+          ]
+        },
+        {
+          "id": "urgency",
+          "header": "Urgency",
+          "question": "Is there a deadline?",
+          "options": [
+            "Within days",
+            "Within weeks",
+            "No deadline"
+          ]
+        }
+      ]
+    },
+    "home": {
+      "label": "Home and moving",
+      "keywords": [
+        "moving house",
+        "move house",
+        "moving to",
+        "relocate",
+        "renovate",
+        "renovation",
+        "apartment",
+        "house",
+        "declutter",
+        "remodel",
+        "furniture"
+      ],
+      "needs": [
+        "research",
+        "organize",
+        "analysis"
+      ],
+      "specialists": [
+        {
+          "id": "home-planner",
+          "position": "Home Project Planner",
+          "names": {
+            "people": "Scott",
+            "heroes": "Blueprint",
+            "professional": "Home Project Planner"
+          },
+          "archetype": "specialist",
+          "expertise": [
+            "renovation planning",
+            "contractors",
+            "materials"
+          ],
+          "description": "Plans renovations and home projects.",
+          "when": [
+            "renovate",
+            "renovation",
+            "remodel",
+            "furniture",
+            "repair"
+          ]
+        },
+        {
+          "id": "moving-coordinator",
+          "position": "Moving Coordinator",
+          "names": {
+            "people": "Ali",
+            "heroes": "Relay",
+            "professional": "Moving Coordinator"
+          },
+          "archetype": "organizer",
+          "expertise": [
+            "moving checklists",
+            "movers",
+            "utilities"
+          ],
+          "description": "Organizes the move step by step.",
+          "covers": [
+            "organize"
+          ],
+          "when": [
+            "move",
+            "moving",
+            "relocate"
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "type",
+          "header": "Project",
+          "question": "What's the project?",
+          "options": [
+            "Moving",
+            "Renovating",
+            "Buying or renting",
+            "Organizing / decluttering"
+          ],
+          "answered_if": [
+            "move",
+            "moving",
+            "renovat",
+            "rent",
+            "buy",
+            "declutter"
+          ]
+        },
+        {
+          "id": "when",
+          "header": "When",
+          "question": "When does it need to happen?",
+          "options": [
+            "This month",
+            "In 1-3 months",
+            "Later this year",
+            "Not sure yet"
+          ]
+        },
+        {
+          "id": "budget",
+          "header": "Budget",
+          "question": "Budget level?",
+          "options": [
+            "Tight",
+            "Moderate",
+            "Flexible"
+          ]
+        },
+        {
+          "id": "help",
+          "header": "Help",
+          "question": "What help do you want?",
+          "options": [
+            "A plan and checklist",
+            "Find and compare options",
+            "Estimate costs",
+            "All of it"
+          ],
+          "multi": true
+        }
+      ]
     }
   },
   "kickoff_generic": [

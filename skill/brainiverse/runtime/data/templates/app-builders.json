@@ -129,5 +129,9 @@
     "Review quality and security",
     "Deploy (only with approval)",
     "Report actual results"
+  ],
+  "notes": [
+    "Best used as a **project team**: `project adopt` writes each agent to `.claude/agents/` and the team stays with the repo.",
+    "DevOps starts disabled: `agent enable devops --team @project` when deployment is near. Pushing or deploying needs `repo_push`/`external_api` plus an approval for that action."
   ]
 }

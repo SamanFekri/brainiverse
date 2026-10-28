@@ -62,10 +62,10 @@ test("no signals falls back to research + analysis with a disclosed assumption",
 });
 
 test("templates load and are valid", () => {
-  assert.deepEqual(teams.templateIds(), ["app-builders", "discovery-crew", "travel-squad"]);
+  assert.deepEqual(teams.templateIds(), ["app-builders", "discovery-crew", "launch-team", "learning-lab", "life-ops", "travel-squad"]);
   for (const id of teams.templateIds()) {
     const team = teams.teamFromTemplate(id);
-    assert.ok(team.agents.length >= 7);
+    assert.ok(team.agents.length >= 6);
     assert.equal(team.leader, "leader");
   }
   assert.equal(teams.findAgent(teams.teamFromTemplate("app-builders"), "devops").enabled, false);

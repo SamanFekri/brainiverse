@@ -29,13 +29,15 @@ with the **Agent tool** (project-team agents as their own `.claude/agents/braini
 | Leader / Strategist | `agents/leader.md`, `SKILL.md` | the main session's behaviour |
 | Orchestration Engine | `orchestrator.mjs` | missions, task DAG, ready-set scheduling, concurrency, retries, timeouts, cancellation, revision limits, result protocol |
 | Meeting Engine | `meetings.mjs` | group meetings and direct lines, contributions only from real invocations, decisions, questions, action items |
-| Model Adapters | `tools.mjs` (`MODEL_ADAPTERS`) | model tiers (fast/balanced/deep/inherit) → host models |
+| Model Adapters | `tools.mjs` (`MODEL_ADAPTERS`) | model tiers (fast/balanced/deep/inherit) → host models; hosts: claude-code, claude-agent-sdk, generic |
 | Tool Adapters | `tools.mjs` (`TOOL_ADAPTERS`) | capabilities → host tools; risk levels |
 | Skill Discovery | `skills.mjs`, `workflows/skill-discovery.md` | local inventory, candidates, static security scan, approval gate, install verification |
 | Project teams & intake | `project.mjs` | project team selection, `.claude/agents/` sync, request routing (answer / quick team / project team) |
+| Tool guard | `hooks/guard.mjs` | PreToolUse hook in each project agent's file: protected paths, capability-checked tools, approval-gated commands |
+| Dashboard | `dashboard.mjs` | read-only local web view (board, team, meetings, approvals, usage) and static snapshots |
 | Memory Manager | `memory.mjs` | agent / team / project scopes, secret refusal and redaction |
 | Permission Manager | `permissions.mjs` | capability checks, approvals, agent-vs-leader command guard |
-| Evaluation Engine | `evaluation.mjs` | evidence-required reviews, metrics |
+| Evaluation Engine | `evaluation.mjs`, `orchestrator.usageReport` | evidence-required reviews, metrics, host-reported usage and cost |
 | Logging | `audit.mjs` | append-only, redacted JSONL per mission |
 | Integration layer | `cli.mjs`, `args.mjs`, `bin/` | CLI and npx installer |
 | Agent briefs | `briefs.mjs` | the prompt each subagent receives: identity, role, task, upstream results, memory, permissions, report format |

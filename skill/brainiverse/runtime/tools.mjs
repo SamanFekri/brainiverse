@@ -30,28 +30,39 @@ export const CAPABILITIES = {
 
 const GATED_RISKS = new Set(["external", "destructive", "financial"]);
 
+const CLAUDE_TOOLS = {
+  web_search: ["WebSearch"],
+  web_browse: ["WebFetch"],
+  file_read: ["Read", "Grep", "Glob"],
+  file_write: ["Write", "Edit"],
+  code_exec: ["Bash"],
+  repo_write: ["Bash"],
+  repo_push: ["Bash"],
+  external_api: ["Bash", "WebFetch"],
+  send_communication: [],
+  calendar_write: [],
+  install_skill: ["Bash"],
+  delete_data: ["Bash"],
+  spend_money: [],
+};
+
 export const TOOL_ADAPTERS = {
-  "claude-code": {
-    web_search: ["WebSearch"],
-    web_browse: ["WebFetch"],
-    file_read: ["Read", "Grep", "Glob"],
-    file_write: ["Write", "Edit"],
-    code_exec: ["Bash"],
-    repo_write: ["Bash"],
-    repo_push: ["Bash"],
-    external_api: ["Bash", "WebFetch"],
-    send_communication: [],
-    calendar_write: [],
-    install_skill: ["Bash"],
-    delete_data: ["Bash"],
-    spend_money: [],
-  },
+  // The Claude Agent SDK uses the same built-in tool names as Claude Code.
+  "claude-agent-sdk": CLAUDE_TOOLS,
+  // Any other host: capabilities are passed through as-is for the host to map.
+  generic: Object.fromEntries(Object.keys(CAPABILITIES).map((c) => [c, [c]])),
+  "claude-code": CLAUDE_TOOLS,
 };
 
 // The Agent tool's `model` parameter; null means inherit the session model.
 export const MODEL_ADAPTERS = {
   "claude-code": { inherit: null, fast: "haiku", balanced: "sonnet", deep: "opus" },
+  // AgentDefinition.model in the Claude Agent SDK takes the same aliases.
+  "claude-agent-sdk": { inherit: "inherit", fast: "haiku", balanced: "sonnet", deep: "opus" },
+  generic: { inherit: null, fast: "fast", balanced: "balanced", deep: "deep" },
 };
+
+export const HOSTS = Object.keys(TOOL_ADAPTERS);
 
 export const MODEL_TIERS = ["inherit", "fast", "balanced", "deep"];
 

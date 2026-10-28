@@ -291,6 +291,65 @@ export function submit(state, taskId, result, { tokens = 0, at = now() } = {}) {
   return task;
 }
 
+/**
+ * Record what the host reported for an invocation (Claude Code shows it in every Agent result):
+ * total tokens, tool uses, wall time. Host numbers replace any agent-reported token count.
+ */
+export function recordUsage(state, taskId, { tokens, tool_uses, duration_ms, invocation } = {}) {
+  const task = getTask(state, taskId);
+  const invocationId = invocation || task.invocations.at(-1);
+  const record = state.invocations[invocationId];
+  if (!record || record.task !== taskId) throw new BrainiverseError(`no invocation ${invocationId} for ${taskId}`);
+  for (const [name, value] of Object.entries({ tokens, tool_uses, duration_ms })) {
+    if (value !== undefined && (!Number.isInteger(value) || value < 0)) throw new BrainiverseError(`${name} must be a non-negative integer`);
+  }
+  record.host_usage = { tokens: tokens ?? null, tool_uses: tool_uses ?? null, duration_ms: duration_ms ?? null };
+  if (tokens !== undefined) record.tokens = tokens;
+  state.usage.tokens = Object.values(state.invocations).reduce((n, i) => n + (i.tokens || 0), 0);
+  return record;
+}
+
+/** Usage by agent and by model tier; cost only where the human set a price (no built-in price list). */
+export function usageReport(state, prices = {}) {
+  const tierOf = Object.fromEntries(state.team.agents.map((a) => [a.id, a.model || "inherit"]));
+  const byAgent = {};
+  const byTier = {};
+  let reported = 0;
+  for (const inv of Object.values(state.invocations)) {
+    const tier = tierOf[inv.agent] || "inherit";
+    for (const [bucket, key] of [[byAgent, inv.agent], [byTier, tier]]) {
+      const row = (bucket[key] ||= { invocations: 0, tokens: 0, tool_uses: 0, duration_ms: 0 });
+      row.invocations += 1;
+      row.tokens += inv.tokens || 0;
+      row.tool_uses += inv.host_usage?.tool_uses || 0;
+      row.duration_ms += inv.host_usage?.duration_ms || 0;
+    }
+    if (inv.host_usage) reported += 1;
+  }
+  let cost = 0;
+  const unpriced = [];
+  for (const [tier, row] of Object.entries(byTier)) {
+    const price = prices[tier];
+    if (price === undefined) {
+      if (row.tokens) unpriced.push(tier);
+    } else {
+      row.cost_usd = Math.round((row.tokens / 1e6) * price * 10000) / 10000;
+      cost += row.cost_usd;
+    }
+  }
+  const priced = !unpriced.length;
+  return {
+    tokens: state.usage.tokens,
+    invocations: Object.keys(state.invocations).length,
+    host_reported: reported,
+    by_agent: byAgent,
+    by_tier: byTier,
+    cost_usd: Math.round(cost * 10000) / 10000,
+    unpriced_tiers: unpriced,
+    note: priced ? "" : `Cost covers priced tiers only; set a price for ${unpriced.join(", ")} with \`usage price <tier> <usd per million tokens>\`.`,
+  };
+}
+
 export function accept(state, taskId, evidence = "") {
   const task = getTask(state, taskId);
   if (task.status !== "submitted") throw new BrainiverseError(`${taskId} is ${task.status}; only submitted work can be accepted`);

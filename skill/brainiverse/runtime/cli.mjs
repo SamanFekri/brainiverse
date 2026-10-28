@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import * as audit from "./audit.mjs";
 import * as briefs from "./briefs.mjs";
+import * as dashboard from "./dashboard.mjs";
 import * as evaluation from "./evaluation.mjs";
 import * as meetings from "./meetings.mjs";
 import * as memory from "./memory.mjs";
@@ -14,7 +15,7 @@ import * as skills from "./skills.mjs";
 import * as teams from "./teams.mjs";
 import * as tools from "./tools.mjs";
 import { HelpRequested, parse } from "./args.mjs";
-import { BrainiverseError, Workspace, readJson, writeJson } from "./store.mjs";
+import { BrainiverseError, Workspace, loadData, readJson, writeJson } from "./store.mjs";
 
 // [command, subcommand] pairs a subagent may run. Everything else is Leader-only.
 const AGENT_ALLOWED = new Set([
@@ -216,8 +217,19 @@ handlers.team = (ws, a, sub) => {
       id: t.id, name: t.name, kind: t.id === projectId ? "project" : "quick", agents: t.agents.length, status: t.status || "approved",
     }));
   }
+  if (sub === "domains") {
+    const data = loadData("domains.json");
+    return Object.fromEntries(Object.entries(data.domains).map(([id, d]) => [id, {
+      label: d.label, specialists: d.specialists.map((s) => `${registry.themedName(s.names, theme)} (${s.position})`),
+    }]));
+  }
   if (sub === "propose") {
-    const proposal = teams.proposeTeam(a.mission_text, { theme, maxAgents: a.max, teamId: a.id });
+    const override = {
+      capabilities: a.capabilities ? splitCsv(a.capabilities) : undefined,
+      domains: a.domains ? splitCsv(a.domains) : undefined,
+      complexity: a.complexity,
+    };
+    const proposal = teams.proposeTeam(a.mission_text, { theme, maxAgents: a.max, teamId: a.id, analysis: override });
     const { team, reasons, ...rest } = proposal;
     team.status = "draft";
     teams.save(ws, team);
@@ -764,6 +776,37 @@ handlers.skill = (ws, a, sub) => {
   });
 };
 
+handlers.dashboard = (ws, a) => {
+  if (a.out) {
+    fs.writeFileSync(a.out, dashboard.page(dashboard.snapshot(ws, a.mission)));
+    return { written: a.out, note: "A static snapshot; run `brainiverse dashboard` for a live view." };
+  }
+  return dashboard.serve(ws, a.port ?? 4777).then((server) => ({
+    url: `http://127.0.0.1:${server.address().port}/`,
+    note: "Read-only, local only, refreshes every 3s. Ctrl+C (or TaskStop) to stop.",
+  }));
+};
+
+handlers.usage = (ws, a, sub) => {
+  if (sub === "price") {
+    if (!tools.MODEL_TIERS.includes(a.tier)) throw new BrainiverseError(`tier must be one of ${tools.MODEL_TIERS.join(", ")}`);
+    const usd = Number(a.usd_per_mtok);
+    if (!Number.isFinite(usd) || usd < 0) throw new BrainiverseError("price must be a non-negative number (USD per million tokens)");
+    return ws.setConfig({ prices: { ...(ws.config().prices || {}), [a.tier]: usd } }).prices;
+  }
+  if (sub === "report") return orchestrator.usageReport(ws.readMission(a.mission), ws.config().prices || {});
+  if (sub === "record") {
+    return ws.mission(a.mission, (state) => {
+      const record = orchestrator.recordUsage(state, a.task_id, {
+        tokens: a.tokens, tool_uses: a.tool_uses, duration_ms: a.duration_ms, invocation: a.invocation,
+      });
+      audit.log(ws, state.id, "usage_recorded", { task: a.task_id, invocation: record.id, ...record.host_usage });
+      return { invocation: record.id, ...record.host_usage, mission_tokens: state.usage.tokens };
+    });
+  }
+  throw new BrainiverseError(`unknown usage command ${sub}`);
+};
+
 handlers.review = (ws, a) => ws.mission(a.mission, (state) => {
   const review = evaluation.addReview(state, a.target, a.verdict, a.evidence || [], a.issue || [], a.reviewer || "leader");
   audit.log(ws, state.id, "review", { target: a.target, verdict: a.verdict });
@@ -820,7 +863,11 @@ export const SPEC = {
       subs: {
         templates: { help: "list team templates" },
         list: { help: "list saved teams" },
-        propose: { help: "propose a team for a mission", positional: ["mission_text"], options: { max: { type: "int" }, id: {} } },
+        propose: { help: "propose a team for a mission", positional: ["mission_text"], options: { max: { type: "int" }, id: {},
+          capabilities: { help: "your own analysis, comma-separated: research, ideation, analysis, build, risk, comms, organize" },
+          domains: { help: "your own analysis, comma-separated domain ids (see `domains`)" },
+          complexity: { help: "small | medium | large" } } },
+        domains: { help: "list the domains the team builder knows, with their specialists" },
         "from-template": { help: "create a team from a template", positional: ["template"], options: { id: {} } },
         import: { help: "import a team JSON file", positional: ["path"] },
         show: teamSub([], {}, "show a team (team id, @project or @mission)"),
@@ -885,6 +932,17 @@ export const SPEC = {
       },
     },
     ask: { help: "talk to one agent: a question or a further request (opens or reuses a direct line)", positional: ["agent", "message"], options: M },
+    usage: {
+      help: "token usage and cost, from what the host reports",
+      subs: {
+        record: { help: "record the usage an Agent result reported", positional: ["task_id"],
+          options: { ...M, tokens: { type: "int" }, "tool-uses": { type: "int" }, "duration-ms": { type: "int" }, invocation: {} } },
+        report: { help: "usage by agent and model tier, with cost if prices are set", options: M },
+        price: { help: "set your price for a model tier (USD per million tokens)", positional: ["tier", "usd_per_mtok"] },
+      },
+    },
+    dashboard: { help: "read-only web dashboard: board, team, meetings, approvals, usage",
+      options: { ...M, port: { type: "int", help: "default 4777; 0 picks a free port" }, out: { help: "write a static snapshot HTML file instead" } } },
     status: { help: "progress board", options: M },
     metrics: { help: "mission metrics", options: M },
     perm: { help: "check an agent's permission for a capability", positional: ["agent", "capability"], options: M },
@@ -980,7 +1038,15 @@ export function main(argv = process.argv.slice(2)) {
     }
     const ws = new Workspace(home);
     if (command !== "init") ws.require();
-    print(handlers[command](ws, args, sub));
+    const result = handlers[command](ws, args, sub);
+    if (result instanceof Promise) {
+      result.then(print, (err) => {
+        process.stderr.write(`error: ${err.message}\n`);
+        process.exitCode = 1;
+      });
+      return 0;
+    }
+    print(result);
     return 0;
   } catch (err) {
     if (err instanceof HelpRequested) {

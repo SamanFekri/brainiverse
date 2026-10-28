@@ -167,13 +167,15 @@ or switch themes: `heroes` for superhero-style names, `professional` for positio
 
 Teams aren't picked from a fixed list. `team propose` reads your request and works out which capabilities it
 needs: research, ideas, analysis, building, risk, communication, organizing, review. It adds specialists for
-the domain (travel, software, business, science, learning, productivity, data, marketing, creative work) and
+the domain (travel, software, business, science, learning, productivity, data, marketing, creative work, health,
+personal finance, events, career, legal research, home) and
 caps the size so you get **the smallest team that can do the job**. Each agent comes with a one-line reason
-for being there. Captain then refines the roster, and you can change anything.
+for being there. Captain then refines the roster with its own judgment (it can override the keyword analysis),
+and you can change anything.
 
 The ten building blocks: **Leader · Researcher · Creative Thinker · Analyst · Executor · Challenger ·
-Specialist · Communicator · Organizer · Quality Reviewer**. Three ready-made templates (Travel Squad, App
-Builders, Discovery Crew) are optional shortcuts.
+Specialist · Communicator · Organizer · Quality Reviewer**. Six ready-made templates are optional shortcuts:
+Travel Squad, App Builders, Discovery Crew, Learning Lab, Launch Team and Life Ops.
 
 ### What keeps the agents honest
 
@@ -209,6 +211,14 @@ Builders, Discovery Crew) are optional shortcuts.
   agent memories that you can inspect, edit or delete.
 - 📋 **Debriefs.** Every mission ends with a report: accepted deliverables, decisions, assumptions,
   unresolved issues, reviews and metrics (including which agents were never needed).
+- 🖥️ **Live dashboard.** `brainiverse dashboard` opens a local, read-only board: tasks by status, the team,
+  meetings and direct lines, pending approvals, usage.
+- 💰 **Cost tracking.** Token use, tool calls and time per agent and model tier, from what Claude Code reports.
+  Set your own prices to see dollars.
+- 🧱 **A guard on every project agent.** A PreToolUse hook stops agents from editing team state or their own
+  definitions, and from pushing, deleting, publishing or installing without your approval.
+- 🔌 **Other hosts.** Besides Claude Code, the runtime can hand out agent definitions for the Claude Agent SDK or
+  a generic prompt for any other agent tool.
 
 ## Install
 
@@ -235,6 +245,8 @@ brainiverse project adopt build-and-launch-a-web-app-with-user-login # make it t
 brainiverse agent rename shirin --team @project --name Sherlock --personality "Deductive, dry-witted"
 brainiverse meeting start --objective "Pick the route" --with shirin,babak
 brainiverse ask babak "Can we afford one ryokan night?"
+brainiverse usage report                                            # tokens and cost by agent
+brainiverse dashboard                                               # live board at http://127.0.0.1:4777/
 brainiverse status
 brainiverse mission report
 ```
@@ -245,7 +257,8 @@ Full reference: [docs/cli.md](skill/brainiverse/docs/cli.md).
 
 - Captain is your main Claude Code session, not a separate process. Subagents can't talk to you directly or
   spawn their own agents, so Captain relays.
-- Project-team agents run as their own Claude Code agent types with enforced tool lists. Quick-team agents run
+- Project-team agents run as their own Claude Code agent types with enforced tool lists and a PreToolUse guard.
+  The guard matches command patterns, so it's a strong safety net, not a sandbox. Quick-team agents run
   as general-purpose subagents guided by their brief. Agents added mid-session become their own types from the
   next session.
 - `intake` and `team propose` start from keyword and domain matching. That makes it predictable, and Captain refines it
@@ -262,10 +275,13 @@ skill/brainiverse/          the skill exactly as it's installed
   SKILL.md                  Captain's playbook (always loaded)
   agents/                   the 10 archetype role files (each subagent reads its own)
   workflows/ meetings/      intake, team creation, orchestration, collaboration, skills, war rooms
-  teams/                    notes on the 3 optional templates
+  teams/                    the 6 optional templates (generated from runtime/data/templates)
   docs/                     architecture, customization, CLI reference, examples, limitations
-  runtime/                  orchestration, registry, team builder, meetings, permissions, memory, audit
-test/                       64 tests: unit, CLI, end-to-end (travel, software, research), installer
+  hooks/guard.mjs           PreToolUse guard used by every project agent
+  runtime/                  orchestration, registry, team builder, project teams, meetings, permissions,
+                            memory, audit, dashboard, usage
+test/                       78 tests: unit, CLI, end-to-end (travel, software, research), project teams, guard,
+                            dashboard, adapters, usage, installer
 ```
 
 ## Development
@@ -274,6 +290,7 @@ test/                       64 tests: unit, CLI, end-to-end (travel, software, r
 npm test                                   # node:test, no dependencies
 node skill/brainiverse/bin/brainiverse.mjs --help
 node scripts/gen-cli-docs.mjs              # regenerate the CLI reference after changing commands
+node scripts/gen-team-docs.mjs             # regenerate teams/*.md after changing templates
 npm pack --dry-run                         # see what gets published
 ```
 

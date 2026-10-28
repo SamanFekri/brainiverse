@@ -26,6 +26,8 @@ request needs, delegate to real subagents, run meetings, and deliver a quality-c
 `bv` below means `node "<this skill's base directory>/bin/brainiverse.mjs"`. Define it in each Bash call:
 `bv() { node "<base dir>/bin/brainiverse.mjs" "$@"; }`. State lives in `.brainiverse/` in the current directory.
 Commands print JSON (text for `status`, `brief`, `report`, `chat show`); errors explain what to do.
+The host defaults to Claude Code. On the Claude Agent SDK (`bv config host claude-agent-sdk`) `task start` returns
+`agent_definition`s to register under `agents`, and `generic` returns a plain prompt plus capabilities for any other host.
 `bv <command> --help` documents everything; `docs/cli.md` is the full reference.
 
 | When | Read |
@@ -76,6 +78,9 @@ thoroughly at the start rather than guessing and redoing work later.
 ## Step 3 — Propose the team (one OK)
 
 1. `bv team propose "<request>"` drafts a roster: each entry has `label` (Name (Position)) and `why`.
+   The keyword analysis is a first pass. When it misses (check `analysis`), pass your own reading instead:
+   `--capabilities research,analysis,build --domains travel,finance --complexity medium`
+   (`bv team domains` lists the domains). The runtime validates it.
    Add missing specialists (`bv team add <team> --archetype specialist --name "…" --position "…" --expertise "…"`),
    drop redundant ones, or start from a template (`bv team templates`). Use the kickoff answers: someone
    driving needs no rail planner; a family trip might need a kid-friendly specialist.
@@ -88,7 +93,9 @@ thoroughly at the start rather than guessing and redoing work later.
    Say whether it's a **project team** (stays with this project; its agents are added to `.claude/agents/`) or a
    **quick team** (for this mission). Apply any changes (rename, swap, add, remove, choose another leader).
 3. On OK: `bv team approve <team>`, and for a project team also `bv project adopt <team>`. That writes each
-   agent to `.claude/agents/brainiverse-<id>.md`, so Claude Code enforces its tools. Mention that the new agent
+   agent to `.claude/agents/brainiverse-<id>.md`, so Claude Code enforces its tools, and attaches a PreToolUse
+   guard that blocks writes to `.brainiverse/` and `.claude/` and risky commands (push, delete, publish/deploy,
+   install, send) unless the agent holds that capability and its current task has an approval. Mention that the new agent
    types are fully available from the next Claude Code session (until then the runtime falls back automatically).
 
 ## Step 4 — Start the mission
@@ -107,6 +114,9 @@ Then loop:
 2. Entries with `leader_submits: true` belong to agents without Bash: save the JSON they end with to a file and
    `bv task submit T# --file <path>`. Others submit themselves; if one couldn't, submit its JSON yourself.
    If an agent crashed or returned nothing: `bv task fail T# --error "…"` (retries within limits).
+   **Record usage** from each Agent result (Claude Code reports total tokens, tool uses and duration):
+   `bv usage record T# --tokens <n> --tool-uses <n> --duration-ms <n>`. It feeds the token budget and
+   `bv usage report` (cost appears for tiers the human has priced with `bv usage price <tier> <usd per M tokens>`).
 3. Review each submission → `bv task accept T# --evidence "…"` or `bv task revise T# --feedback "…"`.
    Route important deliverables to the Quality Reviewer.
 4. Short progress updates at milestones, naming agents as Name (Position).
@@ -135,6 +145,8 @@ Have the Quality Reviewer audit the deliverable against the success criteria. Wr
 then `bv mission report`. Present the result. For a quick team, offer to save it (`bv team save @mission --as <name>`).
 
 ## Human controls (honour these at any time)
+"show me the board / dashboard" → `bv dashboard` with `run_in_background` (give them the URL; it's
+read-only and local) or `bv dashboard --out board.html` for a snapshot · "what has this cost?" → `bv usage report` ·
 "stop/pause" → `bv mission pause` (and TaskStop background agents) · "cancel X" → `bv task cancel T#` ·
 "who's on the team?" → `bv team show @project` / `bv status` · "rename Shirin to Sherlock" →
 `bv agent rename shirin --team @project|@mission --name Sherlock` · "make Babak the leader" →

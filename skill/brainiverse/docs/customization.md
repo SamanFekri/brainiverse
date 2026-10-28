@@ -95,3 +95,13 @@ bv memory delete R1 --scope project
 ```
 Agents see their own memory, their team's, and the current project's — never other agents' memory. Records
 that look like secrets (API keys, tokens, private keys, card numbers) are refused.
+
+## Hosts, usage and prices
+```bash
+bv config host claude-code          # default: Agent-tool calls
+bv config host claude-agent-sdk     # task start returns AgentDefinitions for the SDK's `agents` option
+bv config host generic              # plain prompt + capabilities, for any other agent host
+bv usage price balanced 3           # your price in USD per million tokens, per model tier
+bv usage report                     # tokens, tool uses and time by agent and tier; cost where priced
+bv dashboard                        # live read-only board at http://127.0.0.1:4777/
+```

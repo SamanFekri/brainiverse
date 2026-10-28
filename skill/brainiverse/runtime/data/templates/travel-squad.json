@@ -122,5 +122,8 @@
     "Validate logistics",
     "Review risks and facts",
     "Present the result for human review"
+  ],
+  "notes": [
+    "Bookings and payments are **never** made without the `spend_money` capability and an explicit approval for that specific purchase. By default the team produces a plan and a booking checklist."
   ]
 }

@@ -150,6 +150,28 @@ export function build(ws, state, task, { inline = false } = {}) {
 export function agentCall(ws, state, task) {
   const profile = teams.findAgent(state.team, task.agent);
   const host = ws.config().host;
+  if (host === "claude-agent-sdk") {
+    // The SDK host registers this definition in `agents` and delegates the task to it by name.
+    const model = tools.hostModel(profile.model, host);
+    return {
+      call: {
+        agent_name: project.agentName(profile.id),
+        agent_definition: {
+          description: `${registry.label(profile)}: ${profile.description}`,
+          prompt: build(ws, state, task, { inline: true }),
+          tools: tools.hostTools(profile.capabilities, host),
+          ...(model ? { model } : {}),
+        },
+      },
+      leader_submits: true,
+    };
+  }
+  if (host === "generic") {
+    return {
+      call: { prompt: build(ws, state, task, { inline: true }), capabilities: profile.capabilities, model_tier: profile.model },
+      leader_submits: true,
+    };
+  }
   const own = state.team.kind === "project" && project.hasAgentFile(ws, profile);
   const canRunCommands = !own || tools.hostTools(profile.capabilities, host).includes("Bash");
   const call = {

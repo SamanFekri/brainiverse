@@ -1,0 +1,628 @@
+{
+  "capability_signals": {
+    "research": [
+      "research",
+      "investigate",
+      "find",
+      "explore",
+      "discover",
+      "learn",
+      "look into",
+      "market",
+      "options",
+      "compare",
+      "trend",
+      "study",
+      "source",
+      "where",
+      "which"
+    ],
+    "ideation": [
+      "idea",
+      "brainstorm",
+      "creative",
+      "concept",
+      "name",
+      "invent",
+      "innovate",
+      "design",
+      "story",
+      "new product",
+      "alternative",
+      "pivot"
+    ],
+    "analysis": [
+      "analy",
+      "budget",
+      "cost",
+      "price",
+      "data",
+      "evaluate",
+      "whether",
+      "worth",
+      "decide",
+      "decision",
+      "financial",
+      "metric",
+      "forecast",
+      "roi",
+      "trade-off",
+      "tradeoff",
+      "numbers"
+    ],
+    "build": [
+      "build",
+      "create",
+      "implement",
+      "write",
+      "make",
+      "develop",
+      "code",
+      "app",
+      "website",
+      "produce",
+      "draft",
+      "launch",
+      "ship",
+      "deploy",
+      "automate",
+      "plan a",
+      "itinerary"
+    ],
+    "risk": [
+      "risk",
+      "launch",
+      "invest",
+      "worth",
+      "security",
+      "legal",
+      "whether",
+      "safe",
+      "validate",
+      "thesis",
+      "assumption",
+      "pursue",
+      "should i",
+      "should we"
+    ],
+    "comms": [
+      "pitch",
+      "email",
+      "present",
+      "presentation",
+      "message",
+      "stakeholder",
+      "negotiat",
+      "announce",
+      "persuade",
+      "investor",
+      "audience",
+      "marketing",
+      "outreach"
+    ],
+    "organize": [
+      "organize",
+      "schedule",
+      "deadline",
+      "timeline",
+      "weeks",
+      "months",
+      "project",
+      "manage",
+      "track",
+      "routine",
+      "calendar",
+      "milestone",
+      "personal life",
+      "habit"
+    ]
+  },
+  "complexity_signals": {
+    "large": [
+      "launch",
+      "end-to-end",
+      "full",
+      "platform",
+      "startup",
+      "company",
+      "complete",
+      "production",
+      "multi",
+      "months",
+      "scale"
+    ],
+    "small": [
+      "quick",
+      "simple",
+      "small",
+      "just",
+      "short",
+      "single",
+      "one-off",
+      "brief",
+      "tiny"
+    ]
+  },
+  "domains": {
+    "travel": {
+      "label": "Travel planning",
+      "keywords": [
+        "trip",
+        "travel",
+        "vacation",
+        "holiday",
+        "itinerary",
+        "flight",
+        "hotel",
+        "visit",
+        "tour",
+        "journey",
+        "backpack"
+      ],
+      "needs": [
+        "research",
+        "build"
+      ],
+      "questions": [
+        "Travel dates and trip length?",
+        "Total budget and currency?",
+        "Interests (food, culture, nature, nightlife...)?",
+        "Travel style and pace (luxury, budget, relaxed, packed)?",
+        "Who is travelling (solo, couple, family, accessibility needs)?"
+      ],
+      "specialists": [
+        {
+          "id": "navigator",
+          "name": "Navigator",
+          "archetype": "specialist",
+          "expertise": [
+            "itinerary design",
+            "routing",
+            "pacing"
+          ],
+          "description": "Builds the day-by-day itinerary.",
+          "covers": [
+            "build",
+            "organize"
+          ]
+        },
+        {
+          "id": "penny",
+          "name": "Penny",
+          "archetype": "analyst",
+          "expertise": [
+            "travel budgeting",
+            "cost comparison"
+          ],
+          "description": "Analyzes and tracks the budget.",
+          "covers": [
+            "analysis"
+          ],
+          "when": [
+            "budget",
+            "cost",
+            "cheap",
+            "afford",
+            "price",
+            "money"
+          ]
+        },
+        {
+          "id": "logistics",
+          "name": "Logistics Expert",
+          "archetype": "specialist",
+          "expertise": [
+            "transport",
+            "visas",
+            "bookings",
+            "practical constraints"
+          ],
+          "description": "Checks transport, entry requirements, and practical constraints."
+        }
+      ]
+    },
+    "software": {
+      "label": "Software development",
+      "keywords": [
+        "app",
+        "application",
+        "software",
+        "website",
+        "web app",
+        "api",
+        "code",
+        "backend",
+        "frontend",
+        "mobile",
+        "saas",
+        "bug",
+        "feature",
+        "repository",
+        "repo",
+        "database",
+        "deploy"
+      ],
+      "needs": [
+        "build"
+      ],
+      "questions": [
+        "Target platform and preferred stack?",
+        "Is there an existing codebase?",
+        "Who are the users and what is the core use case?",
+        "Deployment target and timeline?"
+      ],
+      "specialists": [
+        {
+          "id": "architect",
+          "name": "Architect",
+          "archetype": "specialist",
+          "expertise": [
+            "system design",
+            "architecture",
+            "technology selection"
+          ],
+          "description": "Designs the architecture."
+        },
+        {
+          "id": "coder",
+          "name": "Coder",
+          "archetype": "executor",
+          "expertise": [
+            "implementation",
+            "refactoring"
+          ],
+          "description": "Implements features.",
+          "covers": [
+            "build"
+          ]
+        },
+        {
+          "id": "tester",
+          "name": "Tester",
+          "archetype": "quality_reviewer",
+          "expertise": [
+            "automated testing",
+            "test design"
+          ],
+          "description": "Writes and runs tests.",
+          "covers": [
+            "review"
+          ]
+        },
+        {
+          "id": "security-guardian",
+          "name": "Security Guardian",
+          "archetype": "challenger",
+          "expertise": [
+            "application security",
+            "threat modeling"
+          ],
+          "description": "Reviews security.",
+          "covers": [
+            "risk"
+          ],
+          "when": [
+            "security",
+            "auth",
+            "login",
+            "payment",
+            "user data",
+            "production",
+            "launch"
+          ]
+        },
+        {
+          "id": "devops",
+          "name": "DevOps Engineer",
+          "archetype": "executor",
+          "expertise": [
+            "CI/CD",
+            "infrastructure",
+            "deployment"
+          ],
+          "description": "Handles deployment and infrastructure.",
+          "when": [
+            "deploy",
+            "launch",
+            "production",
+            "host",
+            "infrastructure",
+            "scale"
+          ]
+        }
+      ]
+    },
+    "business": {
+      "label": "Business strategy",
+      "keywords": [
+        "business",
+        "startup",
+        "company",
+        "market",
+        "customer",
+        "revenue",
+        "pricing",
+        "competitor",
+        "entrepreneur",
+        "venture",
+        "product-market",
+        "business idea",
+        "go-to-market"
+      ],
+      "needs": [
+        "research",
+        "analysis",
+        "risk"
+      ],
+      "questions": [
+        "Target customer and market?",
+        "Available capital and runway?",
+        "What would make the idea worth pursuing for you?"
+      ],
+      "specialists": [
+        {
+          "id": "sherlock",
+          "name": "Sherlock",
+          "archetype": "researcher",
+          "expertise": [
+            "market research",
+            "competitor analysis"
+          ],
+          "description": "Researches the market.",
+          "covers": [
+            "research"
+          ]
+        },
+        {
+          "id": "brain",
+          "name": "Brain",
+          "archetype": "analyst",
+          "expertise": [
+            "financial modeling",
+            "unit economics"
+          ],
+          "description": "Analyzes evidence and financial assumptions.",
+          "covers": [
+            "analysis"
+          ]
+        }
+      ]
+    },
+    "science": {
+      "label": "Scientific research",
+      "keywords": [
+        "scientific",
+        "science",
+        "hypothesis",
+        "experiment",
+        "paper",
+        "literature",
+        "study",
+        "biology",
+        "physics",
+        "chemistry",
+        "clinical",
+        "emerging technolog",
+        "technology"
+      ],
+      "needs": [
+        "research",
+        "analysis"
+      ],
+      "questions": [
+        "What depth is needed (overview, literature review, experimental design)?",
+        "Any required sources or exclusions?"
+      ],
+      "specialists": [
+        {
+          "id": "scholar",
+          "name": "Scholar",
+          "archetype": "specialist",
+          "expertise": [
+            "literature review",
+            "research methodology"
+          ],
+          "description": "Applies scientific methodology and reviews literature."
+        }
+      ]
+    },
+    "learning": {
+      "label": "Education and learning",
+      "keywords": [
+        "learn",
+        "study",
+        "course",
+        "teach",
+        "understand",
+        "skill up",
+        "curriculum",
+        "exam",
+        "tutorial",
+        "master"
+      ],
+      "needs": [
+        "research",
+        "build"
+      ],
+      "questions": [
+        "Current level and background?",
+        "Hours per week available?",
+        "Goal (job, exam, project, curiosity)?",
+        "Preferred formats (video, books, hands-on)?"
+      ],
+      "specialists": [
+        {
+          "id": "mentor",
+          "name": "Mentor",
+          "archetype": "specialist",
+          "expertise": [
+            "curriculum design",
+            "pedagogy",
+            "learning paths"
+          ],
+          "description": "Designs the learning path and explains concepts.",
+          "covers": [
+            "build",
+            "organize"
+          ]
+        }
+      ]
+    },
+    "productivity": {
+      "label": "Personal productivity",
+      "keywords": [
+        "organize",
+        "productivity",
+        "personal life",
+        "habit",
+        "routine",
+        "time management",
+        "todo",
+        "to-do",
+        "goals",
+        "declutter",
+        "inbox"
+      ],
+      "needs": [
+        "organize",
+        "build"
+      ],
+      "questions": [
+        "Which areas of life matter most right now?",
+        "Which tools do you already use (calendar, notes, task app)?"
+      ],
+      "specialists": [
+        {
+          "id": "coach",
+          "name": "Coach",
+          "archetype": "specialist",
+          "expertise": [
+            "habit design",
+            "time management",
+            "personal systems"
+          ],
+          "description": "Designs routines and personal systems."
+        }
+      ]
+    },
+    "data": {
+      "label": "Data analysis",
+      "keywords": [
+        "data",
+        "dataset",
+        "csv",
+        "spreadsheet",
+        "dashboard",
+        "statistics",
+        "sql",
+        "analytics",
+        "visualiz",
+        "machine learning",
+        "model"
+      ],
+      "needs": [
+        "analysis"
+      ],
+      "questions": [
+        "Where does the data live and how large is it?",
+        "Which question should the analysis answer?"
+      ],
+      "specialists": [
+        {
+          "id": "data-engineer",
+          "name": "Pipeline",
+          "archetype": "executor",
+          "expertise": [
+            "data cleaning",
+            "SQL",
+            "pipelines"
+          ],
+          "description": "Prepares and transforms the data.",
+          "covers": [
+            "build"
+          ]
+        }
+      ]
+    },
+    "marketing": {
+      "label": "Marketing and communication",
+      "keywords": [
+        "marketing",
+        "brand",
+        "campaign",
+        "social media",
+        "audience",
+        "seo",
+        "content",
+        "newsletter",
+        "launch announcement",
+        "promotion",
+        "advertis"
+      ],
+      "needs": [
+        "research",
+        "ideation",
+        "comms"
+      ],
+      "questions": [
+        "Target audience and channels?",
+        "Budget and timeline?",
+        "Brand voice constraints?"
+      ],
+      "specialists": [
+        {
+          "id": "marketer",
+          "name": "Megaphone",
+          "archetype": "specialist",
+          "expertise": [
+            "marketing strategy",
+            "positioning",
+            "channels"
+          ],
+          "description": "Plans positioning and channels."
+        }
+      ]
+    },
+    "creative": {
+      "label": "Creative projects",
+      "keywords": [
+        "novel",
+        "story",
+        "book",
+        "music",
+        "film",
+        "video",
+        "art",
+        "game",
+        "poem",
+        "script",
+        "illustration",
+        "podcast",
+        "comic"
+      ],
+      "needs": [
+        "ideation",
+        "build"
+      ],
+      "questions": [
+        "Format, length, and audience?",
+        "Style references you like?"
+      ],
+      "specialists": [
+        {
+          "id": "storyteller",
+          "name": "Muse",
+          "archetype": "specialist",
+          "expertise": [
+            "storytelling",
+            "creative craft"
+          ],
+          "description": "Guides craft, structure, and style.",
+          "covers": [
+            "ideation"
+          ]
+        }
+      ]
+    }
+  }
+}

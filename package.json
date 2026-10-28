@@ -1,0 +1,32 @@
+{
+  "name": "brainiverse",
+  "version": "0.1.0",
+  "description": "The right minds for every mission: a customizable multi-agent AI team skill for Claude Code.",
+  "type": "module",
+  "bin": {
+    "brainiverse": "bin/brainiverse.mjs"
+  },
+  "files": [
+    "assets/",
+    "bin/",
+    "skill/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "skill",
+    "agents",
+    "multi-agent",
+    "orchestration"
+  ],
+  "author": "saman",
+  "license": "MIT"
+}

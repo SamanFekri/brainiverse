@@ -1,0 +1,13 @@
+node_modules/
+.brainiverse/
+*.tgz
+.DS_Store
+
+# graphify: keep the report and graph, ignore caches, manifests and temp files
+graphify-out/*
+!graphify-out/GRAPH_REPORT.md
+!graphify-out/graph.json
+!graphify-out/graph.html
+
+# brag launch videos (brag-output/ and timestamped brag-output-*/)
+brag-output*/

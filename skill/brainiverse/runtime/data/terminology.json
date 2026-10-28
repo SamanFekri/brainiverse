@@ -1,0 +1,18 @@
+{
+  "themed": {
+    "team": "Squad",
+    "project": "Mission",
+    "meeting": "War Room",
+    "invite": "Call in a specialist",
+    "task": "Mission assignment",
+    "final_review": "Mission debrief"
+  },
+  "professional": {
+    "team": "Team",
+    "project": "Project",
+    "meeting": "Meeting",
+    "invite": "Invite an agent",
+    "task": "Task",
+    "final_review": "Final review"
+  }
+}

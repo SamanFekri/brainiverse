@@ -1,0 +1,24 @@
+{
+  "id": "discovery-crew",
+  "name": "Discovery Crew",
+  "description": "Investigates open questions and business ideas, then recommends a course of action.",
+  "doc": "teams/discovery-crew.md",
+  "leader": "captain",
+  "agents": [
+    {"id": "captain", "archetype": "leader", "name": "Captain", "description": "Leads the investigation."},
+    {"id": "sherlock", "archetype": "researcher", "name": "Sherlock", "description": "Researches the market.", "expertise": ["market research", "competitor analysis"], "personality": "Deductive, meticulous, dry-witted"},
+    {"id": "lumen", "archetype": "researcher", "name": "Lumen", "description": "Identifies trends and opportunities.", "expertise": ["trend analysis", "emerging technologies"]},
+    {"id": "brain", "archetype": "analyst", "name": "Brain", "description": "Analyzes evidence and financial assumptions.", "expertise": ["financial modeling", "unit economics"]},
+    {"id": "spark", "archetype": "creative_thinker", "name": "Spark", "description": "Generates alternative concepts."},
+    {"id": "skeptic", "archetype": "challenger", "name": "Skeptic", "description": "Challenges the thesis."},
+    {"id": "auditor", "archetype": "quality_reviewer", "name": "Auditor", "description": "Reviews the final recommendation."}
+  ],
+  "workflow": [
+    "Investigate the question",
+    "Generate possibilities",
+    "Analyze evidence",
+    "Challenge assumptions",
+    "Discuss uncertainty with the human",
+    "Produce and audit recommendations"
+  ]
+}

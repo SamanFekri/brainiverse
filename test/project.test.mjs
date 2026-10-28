@@ -176,3 +176,46 @@ test("instant missions keep nothing: closing deletes the unsaved team", () => {
   assert.equal(cli(home, ["mission", "close"]).json.removed_team, undefined);
   assert.equal(cli(home, ["team", "show", "paris"]).code, 0);
 });
+
+test("agents can ask for a specialist mid-mission; the Leader grants (project: persists) or declines", () => {
+  const { root, home } = projectDir();
+  cli(home, ["team", "from-template", "app-builders", "--id", "todo"]);
+  cli(home, ["project", "adopt", "todo"]);
+  cli(home, ["mission", "new", "--goal", "Add subscriptions"]);
+  cli(home, ["task", "add", "--agent", "tyler", "--objective", "Wire up billing"]);
+  cli(home, ["task", "start", "T1"]);
+  const brief = runAgent(home, "T1", "coder", {
+    status: "partial", findings: "Plans need a payments expert for webhooks and proration.",
+    agent_requests: [{ position: "Payments Expert", why: "Stripe webhooks and proration", expertise: ["Stripe", "webhooks"] },
+      { position: "Lawyer", why: "terms of service" }],
+  });
+  assert.match(brief, /agent_requests/, "agents are told they can ask for a specialist");
+  const pending = cli(home, ["team", "requests"]).json;
+  assert.deepEqual(pending.map((r) => r.position), ["Payments Expert", "Lawyer"]);
+  assert.match(cli(home, ["status"]).out, /Agent request AR1: Tyler \(Coder\) asks for a Payments Expert/);
+
+  const granted = cli(home, ["team", "grant-request", "AR1"]).json;
+  assert.equal(granted.label, "Amanda (Payments Expert)");
+  assert.ok(fs.existsSync(agentFile(root, granted.added)), "on a project team the new specialist joins the project for good");
+  assert.ok(cli(home, ["team", "show", "@project"]).json.agents.some((a) => a.id === granted.added));
+  assert.equal(cli(home, ["task", "add", "--agent", "Amanda", "--objective", "Design the webhook handling"]).code, 0);
+  assert.equal(cli(home, ["team", "decline-request", "AR2", "--reason", "information only; not legal advice"]).json.status, "declined");
+  assert.match(cli(home, ["team", "grant-request", "AR2"]).err, /already declined/);
+  assert.deepEqual(cli(home, ["team", "requests"]).json, []);
+  const bad = cli(home, ["task", "submit", "T1"], { agent: "coder", input: JSON.stringify({ status: "complete", findings: "x", agent_requests: [{ position: "X" }] }) });
+  assert.match(bad.err, /needs 'position' and 'why'|only a running task/);
+});
+
+test("software specialists match the request; a generalist only when no specialist fits", () => {
+  const { home } = projectDir();
+  const roster = (text) => cli(home, ["team", "propose", text]).json.roster.map((r) => r.label);
+  const web = roster("Build and launch a web application with user login");
+  for (const who of ["Ethan (Frontend Web Developer)", "Kamran (Backend Developer)", "Ben (Security Reviewer)", "Jason (DevOps Engineer)", "Nick (Tester)"]) {
+    assert.ok(web.includes(who), who);
+  }
+  assert.ok(!web.includes("Tyler (Software Engineer)"), "specialized developers replace the generalist");
+  assert.ok(roster("build an iOS and Android app for my bakery").includes("Nathan (Mobile App Developer)"));
+  assert.ok(roster("make a small game in Godot").includes("Hamid (Game Developer)"));
+  assert.ok(roster("write a python script to rename files").includes("Tyler (Software Engineer)"));
+  assert.ok(!roster("write a python script to rename files").includes("Azadeh (Storyteller)"));
+});

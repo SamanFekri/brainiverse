@@ -149,6 +149,36 @@ propose a team for a mission
 ### `brainiverse team domains`
 list the domains the team builder knows, with their specialists
 
+### `brainiverse team catalog [request]`
+every available agent with its job; Captain's picks for the request are pre-checked
+
+### `brainiverse team requests`
+specialists that agents asked for in their results
+
+- `--mission <value>` — mission id (default: the active mission)
+- `--all`
+
+### `brainiverse team grant-request <request_id>`
+create the requested specialist and add it to the team
+
+- `--mission <value>` — mission id (default: the active mission)
+- `--team <value>` — @mission (default) or @project
+
+### `brainiverse team decline-request <request_id>`
+decline an agent's request for a specialist
+
+- `--mission <value>` — mission id (default: the active mission)
+- `--reason <value>`
+
+### `brainiverse team build`
+build a team from the human's picks (catalog ids or names) and new agents
+
+- `--pick <value>` — comma-separated catalog ids or names, e.g. "shirin,babak,olivia"
+- `--want <value>` — new agents by position, e.g. "Translator, Payments Expert"
+- `--id <value>`
+- `--name <value>`
+- `--description <value>`
+
 ### `brainiverse team from-template <template>`
 create a team from a template
 

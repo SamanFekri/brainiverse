@@ -29,7 +29,7 @@ export const OPEN = ["pending", "running", "submitted"];
 export const TERMINAL = ["done", "failed", "cancelled", "blocked"];
 export const RESULT_STATUSES = ["complete", "partial", "blocked", "failed"];
 const RESULT_LIST_FIELDS = ["evidence", "assumptions", "recommendations", "blockers", "next_steps",
-  "deliverables", "actions", "memory_suggestions"];
+  "deliverables", "actions", "memory_suggestions", "agent_requests"];
 
 export const now = () => Date.now() / 1000;
 
@@ -265,6 +265,11 @@ export function validateResult(result) {
     if (!Array.isArray(result[field])) throw new BrainiverseError(`result.${field} must be a list`);
   }
   result.uncertainty ??= "";
+  for (const request of result.agent_requests) {
+    if (!request || typeof request !== "object" || !request.position || !request.why) {
+      throw new BrainiverseError("each result.agent_requests item needs 'position' and 'why'");
+    }
+  }
   for (const action of result.actions) {
     // An action claimed as done must carry proof from the execution layer.
     if (!action || typeof action !== "object" || !("action" in action)) {
@@ -288,6 +293,16 @@ export function submit(state, taskId, result, { tokens = 0, at = now() } = {}) {
   task.result = result;
   task.status = "submitted";
   task.finished = at;
+  // An agent that needs expertise nobody on the team has asks for a specialist; the Leader decides.
+  state.agent_requests ||= {};
+  for (const request of result.agent_requests) {
+    const id = nextId("AR", state.agent_requests);
+    state.agent_requests[id] = {
+      id, from: task.agent, task: task.id, position: String(request.position).trim(), why: String(request.why).trim(),
+      expertise: Array.isArray(request.expertise) ? request.expertise.map(String) : [],
+      role: request.role || null, status: "pending", agent: null, created: at,
+    };
+  }
   return task;
 }
 

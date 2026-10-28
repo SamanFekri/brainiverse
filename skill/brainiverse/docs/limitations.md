@@ -33,7 +33,10 @@
   multi-user authentication.
 
 ## Built since the first release
-- **PreToolUse guard** (`hooks/guard.mjs`): registered in every project agent's file. It blocks writes to
+- **PreToolUse guard** (`hooks/guard.mjs`): registered in every project agent's file. It enforces that only the
+  Leader creates agents: project agents can't use the Agent tool, and the only Brainiverse commands they may run
+  are reading their task, submitting their result and read-only views (no `team add`, `grant-request`,
+  `agent grant`, `project adopt`…). It also blocks writes to
   `.brainiverse/` and `.claude/`, tools outside the agent's capabilities, MCP tools without `external_api`, and
   risky Bash commands (push, delete, publish/deploy, skill installs, sending mail) unless the agent holds that
   capability and its current task has a human approval. It fails open on unreadable input so a bug can't block all

@@ -511,23 +511,39 @@
     "software": {
       "label": "Software development",
       "keywords": [
+        "android",
+        "api",
         "app",
         "application",
-        "software",
-        "website",
-        "web app",
-        "api",
-        "code",
         "backend",
-        "frontend",
-        "mobile",
-        "saas",
+        "bash script",
         "bug",
-        "feature",
-        "repository",
-        "repo",
+        "cli tool",
+        "code",
         "database",
-        "deploy"
+        "deploy",
+        "developer",
+        "engineer",
+        "feature",
+        "flutter",
+        "frontend",
+        "game",
+        "ios",
+        "javascript",
+        "mobile",
+        "mvp",
+        "python",
+        "python script",
+        "react",
+        "repo",
+        "repository",
+        "saas",
+        "script to",
+        "shell script",
+        "software",
+        "typescript",
+        "web app",
+        "website"
       ],
       "needs": [
         "build"
@@ -740,20 +756,326 @@
         },
         {
           "id": "coder",
-          "position": "Coder",
+          "position": "Software Engineer",
           "names": {
             "people": "Tyler",
             "heroes": "Coder",
-            "professional": "Coder"
+            "professional": "Software Engineer"
           },
           "archetype": "executor",
           "expertise": [
             "implementation",
-            "refactoring"
+            "refactoring",
+            "testing basics"
           ],
-          "description": "Implements features.",
+          "description": "Implements features across the stack.",
           "covers": [
             "build"
+          ],
+          "unless": [
+            "web",
+            "website",
+            "frontend",
+            "front-end",
+            "react",
+            "next.js",
+            "nextjs",
+            "vue",
+            "svelte",
+            "angular",
+            "landing page",
+            "html",
+            "css",
+            "api",
+            "backend",
+            "back-end",
+            "server",
+            "database",
+            "login",
+            "auth",
+            "payments",
+            "stripe",
+            "graphql",
+            "rest",
+            "microservice",
+            "ios",
+            "android",
+            "mobile app",
+            "mobile",
+            "react native",
+            "flutter",
+            "swift",
+            "kotlin",
+            "app store",
+            "play store",
+            "game",
+            "unity",
+            "godot"
+          ]
+        },
+        {
+          "id": "frontend-dev",
+          "position": "Frontend Web Developer",
+          "names": {
+            "people": "Ethan",
+            "heroes": "Pixel",
+            "professional": "Frontend Web Developer"
+          },
+          "archetype": "executor",
+          "expertise": [
+            "HTML/CSS",
+            "React / Vue / Svelte",
+            "accessibility",
+            "performance"
+          ],
+          "description": "Builds the web interface: pages, components, state, accessibility.",
+          "covers": [
+            "build"
+          ],
+          "when": [
+            "web",
+            "website",
+            "frontend",
+            "front-end",
+            "react",
+            "next.js",
+            "nextjs",
+            "vue",
+            "svelte",
+            "angular",
+            "landing page",
+            "html",
+            "css"
+          ]
+        },
+        {
+          "id": "backend-dev",
+          "position": "Backend Developer",
+          "names": {
+            "people": "Kamran",
+            "heroes": "Engine",
+            "professional": "Backend Developer"
+          },
+          "archetype": "executor",
+          "expertise": [
+            "APIs",
+            "auth",
+            "integrations",
+            "background jobs"
+          ],
+          "description": "Builds APIs, business logic, auth and integrations.",
+          "covers": [
+            "build"
+          ],
+          "when": [
+            "api",
+            "backend",
+            "back-end",
+            "server",
+            "database",
+            "login",
+            "auth",
+            "payments",
+            "stripe",
+            "graphql",
+            "rest",
+            "microservice"
+          ]
+        },
+        {
+          "id": "mobile-dev",
+          "position": "Mobile App Developer",
+          "names": {
+            "people": "Nathan",
+            "heroes": "Orbit",
+            "professional": "Mobile App Developer"
+          },
+          "archetype": "executor",
+          "expertise": [
+            "iOS",
+            "Android",
+            "React Native / Flutter",
+            "app store release"
+          ],
+          "description": "Builds the iOS / Android app.",
+          "covers": [
+            "build"
+          ],
+          "when": [
+            "ios",
+            "android",
+            "mobile app",
+            "mobile",
+            "react native",
+            "flutter",
+            "swift",
+            "kotlin",
+            "app store",
+            "play store"
+          ]
+        },
+        {
+          "id": "designer",
+          "position": "UI/UX Designer",
+          "names": {
+            "people": "Yasmin",
+            "heroes": "Prism",
+            "professional": "UI/UX Designer"
+          },
+          "archetype": "creative_thinker",
+          "expertise": [
+            "UX flows",
+            "UI design",
+            "design systems",
+            "accessibility"
+          ],
+          "description": "Designs flows, screens and the visual system.",
+          "when": [
+            "app",
+            "ui",
+            "ux",
+            "design",
+            "screens",
+            "website",
+            "landing page",
+            "mobile"
+          ]
+        },
+        {
+          "id": "database-engineer",
+          "position": "Database Engineer",
+          "names": {
+            "people": "Farshid",
+            "heroes": "Vault",
+            "professional": "Database Engineer"
+          },
+          "archetype": "specialist",
+          "expertise": [
+            "data modeling",
+            "SQL",
+            "migrations",
+            "performance"
+          ],
+          "description": "Designs the data model, queries, migrations and indexes.",
+          "when": [
+            "database",
+            "sql",
+            "postgres",
+            "mysql",
+            "mongodb",
+            "data model",
+            "schema",
+            "migration"
+          ]
+        },
+        {
+          "id": "product-manager",
+          "position": "Product Manager",
+          "names": {
+            "people": "Chloe",
+            "heroes": "Beacon",
+            "professional": "Product Manager"
+          },
+          "archetype": "organizer",
+          "expertise": [
+            "requirements",
+            "prioritization",
+            "roadmaps",
+            "user stories"
+          ],
+          "description": "Turns goals into requirements, priorities and a roadmap.",
+          "covers": [
+            "organize"
+          ],
+          "when": [
+            "mvp",
+            "roadmap",
+            "requirements",
+            "startup",
+            "product",
+            "user stories",
+            "saas"
+          ]
+        },
+        {
+          "id": "ml-engineer",
+          "position": "Machine Learning Engineer",
+          "names": {
+            "people": "Saeed",
+            "heroes": "Neuron",
+            "professional": "Machine Learning Engineer"
+          },
+          "archetype": "executor",
+          "expertise": [
+            "machine learning",
+            "LLMs",
+            "evaluation",
+            "data pipelines"
+          ],
+          "description": "Builds and evaluates ML / AI features.",
+          "when": [
+            "machine learning",
+            "ml",
+            "ai",
+            "llm",
+            "model",
+            "neural",
+            "classifier",
+            "recommendation"
+          ]
+        },
+        {
+          "id": "tech-writer",
+          "position": "Technical Writer",
+          "names": {
+            "people": "Ava",
+            "heroes": "Scribe",
+            "professional": "Technical Writer"
+          },
+          "archetype": "communicator",
+          "expertise": [
+            "documentation",
+            "API docs",
+            "tutorials"
+          ],
+          "description": "Writes docs, READMEs, API references and guides.",
+          "covers": [
+            "comms"
+          ],
+          "when": [
+            "docs",
+            "documentation",
+            "readme",
+            "api docs",
+            "tutorial",
+            "guide"
+          ]
+        },
+        {
+          "id": "game-dev",
+          "position": "Game Developer",
+          "names": {
+            "people": "Hamid",
+            "heroes": "Arcade",
+            "professional": "Game Developer"
+          },
+          "archetype": "executor",
+          "expertise": [
+            "game loops",
+            "Unity / Godot",
+            "physics",
+            "game feel"
+          ],
+          "description": "Builds game mechanics, scenes and loops.",
+          "covers": [
+            "build"
+          ],
+          "when": [
+            "game",
+            "unity",
+            "godot",
+            "unreal",
+            "gameplay"
           ]
         },
         {
@@ -1311,10 +1633,11 @@
         "art",
         "game",
         "poem",
-        "script",
         "illustration",
         "podcast",
-        "comic"
+        "comic",
+        "screenplay",
+        "film script"
       ],
       "needs": [
         "ideation",

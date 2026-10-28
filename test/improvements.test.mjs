@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { ROOT, cli, cliAsync, runAgent, tmpdir } from "./helpers.mjs";
+import { forbiddenCliCall } from "../skill/brainiverse/hooks/guard.mjs";
 
 const GUARD = path.join(ROOT, "skill", "brainiverse", "hooks", "guard.mjs");
 
@@ -161,5 +162,27 @@ test("dashboard: static snapshot escapes agent text; live server serves state", 
   } finally {
     child.kill();
     await server;
+  }
+});
+
+test("only Captain creates agents: project agents can't spawn subagents or change the team via the CLI", () => {
+  const { root } = project();
+  assert.match(guard(root, "coder", "Agent", { prompt: "do it", subagent_type: "general-purpose" }).permissionDecisionReason, /only the Leader/);
+  assert.equal(guard(root, "coder", "Task", { prompt: "x" }).permissionDecision, "deny");
+  for (const command of [
+    "node /x/skill/brainiverse/bin/brainiverse.mjs team add @project --archetype specialist --position Hacker",
+    "npx -y brainiverse team grant-request AR1",
+    "brainiverse status && brainiverse agent grant coder repo_push",
+    "BRAINIVERSE_HOME=/p/.brainiverse node /x/bin/brainiverse.mjs project adopt evil",
+  ]) {
+    assert.equal(guard(root, "coder", "Bash", { command }).permissionDecision, "deny", command);
+  }
+  for (const command of [
+    "BRAINIVERSE_HOME=/p/.brainiverse BRAINIVERSE_AGENT=coder node \"/x/skill/brainiverse/bin/brainiverse.mjs\" task submit T1 --mission m",
+    "BRAINIVERSE_HOME=/p/.brainiverse node /x/bin/brainiverse.mjs task brief T1",
+    "cd /Users/me/Documents/brainiverse && npm test",
+    "git log | grep brainiverse",
+  ]) {
+    assert.equal(forbiddenCliCall(command), null, command);
   }
 });

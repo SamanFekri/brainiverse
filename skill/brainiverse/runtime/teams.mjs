@@ -212,13 +212,24 @@ export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAg
     const domain = domainsData[domainId];
     for (const spec of domain.specialists) {
       if (spec.when && !spec.when.some((w) => matches(lowered, w))) continue;
+      if (spec.unless && spec.unless.some((w) => matches(lowered, w))) continue; // a more specific specialist fits
       const profile = registry.makeAgent(spec.archetype, {
         id: spec.id, theme, names: spec.names, position: spec.position, description: spec.description,
         expertise: spec.expertise || [],
       });
-      add("domain", profile, `${domain.label} specialist: ${spec.description.replace(/\.$/, "").toLowerCase()}.`);
+      // A specialist who covers review (e.g. the Tester) ranks with the quality gate, not with optional domain help.
+      add((spec.covers || []).includes("review") ? "review" : "domain", profile,
+        `${domain.label} specialist: ${spec.description.replace(/\.$/, "").toLowerCase()}.`);
       for (const cap of spec.covers || []) covered.add(cap);
     }
+  }
+
+  // A request that needs many specialists is a bigger mission than its wording suggests: size up.
+  const specialistCount = members.filter((m) => m.tag !== "coordination").length;
+  const order = ["small", "medium", "large"];
+  if (!override?.complexity && analysis.complexity !== "large" && specialistCount >= SIZE_CAP[analysis.complexity] - 1) {
+    analysis.complexity = order[order.indexOf(analysis.complexity) + 1];
+    analysis.assumptions.push("Several specialists are needed, so this is treated as a larger mission.");
   }
 
   const needed = [...analysis.capabilities, "review"];
@@ -271,6 +282,89 @@ export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAg
     kickoff: kickoffQuestions(missionText, { domains: analysis.domains, mode }),
     assumptions: analysis.assumptions,
   };
+}
+
+// -- the catalog: every agent the team builder can field ----------------------------
+
+function catalogEntries(theme) {
+  const data = loadData("domains.json");
+  const entries = [];
+  const seen = new Set();
+  const push = (group, archetype, spec) => {
+    const profile = registry.makeAgent(archetype, { theme, ...spec });
+    if (seen.has(profile.id)) return;
+    seen.add(profile.id);
+    entries.push({ key: profile.id, group, label: registry.label(profile), name: profile.name,
+      job: spec.description || registry.archetypes()[archetype].purpose, archetype, spec });
+  };
+  for (const archetype of Object.keys(registry.archetypes())) push("Core team", archetype, {});
+  for (const domain of Object.values(data.domains)) {
+    for (const s of domain.specialists) {
+      push(domain.label, s.archetype, { id: s.id, names: s.names, position: s.position, description: s.description, expertise: s.expertise || [] });
+    }
+  }
+  for (const templateId of templateIds()) {
+    for (const { archetype, ...spec } of loadTemplate(templateId).agents) push("From the templates", archetype, spec);
+  }
+  return entries;
+}
+
+/** Every available agent, grouped, with Captain's recommended picks for this request pre-checked. */
+export function catalog({ theme = registry.DEFAULT_THEME, request = "" } = {}) {
+  const entries = catalogEntries(theme);
+  const recommended = request.trim() ? proposeTeam(request, { theme }).team.agents.map((a) => a.id) : ["leader"];
+  const groups = [];
+  for (const entry of entries) {
+    let group = groups.find((g) => g.group === entry.group);
+    if (!group) groups.push((group = { group: entry.group, agents: [] }));
+    group.agents.push({ key: entry.key, label: entry.label, job: entry.job, recommended: recommended.includes(entry.key) });
+  }
+  // Groups with a recommended agent first, so the relevant part of the catalog leads.
+  groups.sort((x, y) => Number(y.agents.some((a) => a.recommended)) - Number(x.agents.some((a) => a.recommended)));
+  const text = groups.map((g) => `${g.group}\n` + g.agents.map((a) => `  ${a.recommended ? "☑" : "☐"} ${a.label}: ${a.job}`).join("\n")).join("\n");
+  return { recommended, total: entries.length, groups, text };
+}
+
+/** Build a team from the human's picks (catalog keys or names) plus brand-new agents they asked for. */
+export function buildTeam({ picks = [], want = [], theme = registry.DEFAULT_THEME, teamId, name, description = "" } = {}) {
+  const entries = catalogEntries(theme);
+  const find = (ref) => {
+    const want_ = ref.trim().toLowerCase();
+    return entries.find((e) => e.key === want_) ||
+      entries.find((e) => e.name.toLowerCase() === want_ || e.label.toLowerCase() === want_ || slugify(e.name) === want_);
+  };
+  const leader = registry.makeAgent("leader", { theme });
+  const agents = [leader];
+  for (const ref of picks) {
+    const entry = find(ref);
+    if (!entry) {
+      throw new BrainiverseError(`no agent ${JSON.stringify(ref)} in the catalog (see \`team catalog\`); ` +
+        "to create a new one, pass its position with --want");
+    }
+    if (entry.key === leader.id || agents.some((a) => a.id === entry.key)) continue;
+    const profile = registry.makeAgent(entry.archetype, { theme, ...entry.spec });
+    if (agents.some((a) => a.name.toLowerCase() === profile.name.toLowerCase())) {
+      profile.name = registry.unusedName(theme, agents.map((a) => a.name)) || profile.name;
+    }
+    agents.push(profile);
+  }
+  const requested = requestedAgents(want, { theme, taken: agents.map((a) => a.name) });
+  for (const profile of requested) {
+    const base = profile.id;
+    for (let n = 2; agents.some((a) => a.id === profile.id); n++) profile.id = `${base}-${n}`;
+    agents.push(profile);
+  }
+  return validateTeam({
+    schema_version: 1,
+    id: checkSlug(teamId || slugify(name || description || "my-team").slice(0, 40).replace(/-+$/, "") || "my-team", "team id"),
+    name: name || "Squad",
+    description,
+    leader: leader.id,
+    theme,
+    agents,
+    workflow: [],
+    source: "catalog",
+  });
 }
 
 // -- templates -----------------------------------------------------------------

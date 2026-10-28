@@ -110,6 +110,21 @@ position ("a Payments Expert and a Translator") and they join next to Captain's 
 a name. Later, when a project needs a new skill, Captain creates a new agent for it, and asks you first before it
 joins a project team.
 
+**Pick your own crew.** Before the team is gathered, Captain shows every available agent (about 40), grouped by
+area, each with their job, and Captain's recommendations pre-checked:
+
+```text
+Core team
+  ☑ Shirin (Researcher): Discover information, investigate unknowns, and identify opportunities.
+  ☐ Kaveh (Analyst): Evaluate evidence and support decisions.
+Travel planning
+  ☑ Babak (Budget Analyst): Analyzes and tracks the budget.
+  ☑ Olivia (Itinerary Planner): Builds the day-by-day itinerary.
+  …
+```
+
+Tick or untick anyone, and invent new agents on the spot ("plus a Translator"). The team is built from your choices.
+
 **On the same page from the start.** Before anyone works, Captain runs a kickoff interview with clickable
 questions. For a trip: budget, transport (own car, trains, planes, buses), who's travelling, pace, interests,
 stays, special needs, booking. Answers trigger follow-ups (own car → licence and parking; kids → ages), and
@@ -177,8 +192,11 @@ Iranian names mixed in, and each core agent comes with a character:
 </tr>
 </table>
 
-Domain specialists join when a mission needs them, for example Babak (Budget Analyst), Olivia (Itinerary Planner),
-Arash (Architect), Tyler (Coder), Jason (DevOps Engineer) and Madison (Market Researcher). Rename anyone,
+Domain specialists join when a mission needs them. Travel brings Babak (Budget Analyst) and Olivia (Itinerary Planner),
+and software brings a full engineering bench: Arash (Architect), Tyler (Software Engineer), Ethan (Frontend Web
+Developer), Kamran (Backend Developer), Nathan (Mobile App Developer), Yasmin (UI/UX Designer), Farshid (Database
+Engineer), Chloe (Product Manager), Saeed (Machine Learning Engineer), Ava (Technical Writer), Hamid (Game Developer),
+Nick (Tester), Ben (Security Reviewer) and Jason (DevOps Engineer). Business brings Madison (Market Researcher). Rename anyone,
 or switch themes: `heroes` for superhero-style names, `professional` for positions only.
 
 ### Teams are built for your mission
@@ -220,6 +238,9 @@ Travel Squad, App Builders, Discovery Crew, Learning Lab, Launch Team and Life O
   decide, and the conclusions become tasks.
 - ☎️ **Talk to any agent.** "Babak, …" goes straight to Babak. Ask about earlier work or give a new
   request; Captain relays replies word for word.
+- 🆘 **Agents can call for backup.** An agent that hits a gap asks for a specialist in its result ("I need a Payments
+  Expert for the webhooks"). Only Captain can create agents: it creates one on the fly (asking you first on a
+  project team) or declines. Agents themselves can't start subagents or change the team.
 - 🗂️ **Project teams that stay.** A long-running project keeps its crew, written to `.claude/agents/`, and
   grows it as the work grows.
 - 🧭 **Kickoff interview.** Clickable questions and follow-ups up front, so nobody builds on a wrong guess.
@@ -298,7 +319,7 @@ skill/brainiverse/          the skill exactly as it's installed
   hooks/guard.mjs           PreToolUse guard used by every project agent
   runtime/                  orchestration, registry, team builder, project teams, meetings, permissions,
                             memory, audit, dashboard, usage
-test/                       78 tests: unit, CLI, end-to-end (travel, software, research), project teams, guard,
+test/                       85 tests: unit, CLI, end-to-end (travel, software, research), project teams, guard,
                             dashboard, adapters, usage, installer
 ```
 

@@ -9,7 +9,7 @@ Launches a product or project: positioning, launch plan, copy, channels, and a r
 | Captain (Leader) | Captain | `leader` | Leads the launch. |
 | Madison (Market Researcher) | Sherlock | `market-researcher` | Researches the audience and competitors. |
 | Jessica (Marketing Strategist) | Megaphone | `marketer` | Plans positioning, channels and timing. |
-| Dariush (Copywriter) | Echo | `copywriter` | Writes the launch copy: page, posts, emails. |
+| Brooke (Copywriter) | Echo | `copywriter` | Writes the launch copy: page, posts, emails. |
 | Jake (Creative Thinker) | Spark | `creative` | Finds the hook and the angles. |
 | Sarah (Launch Coordinator) | Atlas | `organizer` | Runs the launch checklist and timeline. |
 | Neda (Challenger) | Riddle | `challenger` | Stress-tests the plan and the claims. |

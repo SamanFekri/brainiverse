@@ -55,12 +55,12 @@ bv task revise T2 --feedback "login test fails on empty password; see Guardian's
 bv task start ready                       # Coder again, brief includes the feedback
 # Deploying needs two approvals: the capability itself, and this specific use of it.
 # (One AskUserQuestion can cover both; record each answer.)
-bv agent enable omid --team @mission
-bv approval request --capability external_api --agent omid --detail "Give Jason (DevOps Engineer) deploy access"
+bv agent enable jason --team @mission
+bv approval request --capability external_api --agent jason --detail "Give Jason (DevOps Engineer) deploy access"
 bv approval resolve A1 approve --note "User: 'yes, Jason (DevOps Engineer) can deploy'"
-bv agent grant omid external_api --team @mission --approval A1
-bv task add --agent omid --objective "Deploy v1 to Fly.io" --needs external_api --accept "health check URL responds"
-bv approval request --capability external_api --agent omid --task T6 --detail "Deploy v1 to Fly.io now"
+bv agent grant jason external_api --team @mission --approval A1
+bv task add --agent jason --objective "Deploy v1 to Fly.io" --needs external_api --accept "health check URL responds"
+bv approval request --capability external_api --agent jason --task T6 --detail "Deploy v1 to Fly.io now"
 bv approval resolve A2 approve --note "User: 'go ahead'"
 bv task attach-approval T6 A2
 bv task start T6

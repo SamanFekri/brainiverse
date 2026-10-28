@@ -217,6 +217,55 @@ handlers.team = (ws, a, sub) => {
       id: t.id, name: t.name, kind: t.id === projectId ? "project" : "quick", agents: t.agents.length, status: t.status || "approved",
     }));
   }
+  if (sub === "catalog") return teams.catalog({ theme, request: a.request || "" });
+  if (sub === "requests") {
+    const state = ws.readMission(a.mission);
+    const rows = Object.values(state.agent_requests || {});
+    return a.all ? rows : rows.filter((r) => r.status === "pending");
+  }
+  if (sub === "grant-request" || sub === "decline-request") {
+    const granting = sub === "grant-request";
+    const created = ws.mission(a.mission, (state) => {
+      const request = (state.agent_requests || {})[a.request_id];
+      if (!request) throw new BrainiverseError(`no agent request ${a.request_id}`);
+      if (request.status !== "pending") throw new BrainiverseError(`${a.request_id} is already ${request.status}`);
+      if (!granting) {
+        request.status = "declined";
+        request.reason = a.reason || "";
+        audit.log(ws, state.id, "agent_request_declined", { request: request.id, reason: a.reason || "" });
+        return null;
+      }
+      const [profile] = teams.requestedAgents([request.role ? `${request.position}:${request.role}` : request.position],
+        { theme, taken: state.team.agents.map((p) => p.name) });
+      profile.expertise = request.expertise;
+      profile.description = `${request.position}, requested by ${registry.label(teams.findAgent(state.team, request.from))}: ${request.why}`;
+      return { request, profile };
+    });
+    if (!created) return { request: a.request_id, status: "declined" };
+    const { request, profile } = created;
+    const target = a.team || "@mission";
+    const team = loadTeam(ws, target, a.mission);
+    for (let n = 2, base = profile.id; team.agents.some((p) => p.id === profile.id); n++) profile.id = `${base}-${n}`;
+    storeTeam(ws, target, teams.addAgent(team, profile), a.mission);
+    if (target !== "@mission") {
+      ws.mission(a.mission, (state) => {
+        if (!state.team.agents.some((p) => p.id === profile.id)) state.team = teams.addAgent(state.team, profile);
+      });
+    }
+    ws.mission(a.mission, (state) => {
+      Object.assign(state.agent_requests[request.id], { status: "granted", agent: profile.id });
+      audit.log(ws, state.id, "agent_request_granted", { request: request.id, agent: profile.id, team: target });
+    });
+    return { request: request.id, status: "granted", added: profile.id, label: registry.label(profile), team: target,
+      next: `Give ${registry.label(profile)} a task (task add --agent ${profile.id} …).` };
+  }
+  if (sub === "build") {
+    const team = teams.buildTeam({ picks: splitCsv(a.pick), want: a.want ? splitCsv(a.want) : [], theme,
+      teamId: a.id, name: a.name, description: a.description || "" });
+    team.status = "draft";
+    teams.save(ws, team);
+    return { team_id: team.id, roster: team.agents.map((p) => ({ id: p.id, label: registry.label(p), archetype: p.archetype })) };
+  }
   if (sub === "domains") {
     const data = loadData("domains.json");
     return Object.fromEntries(Object.entries(data.domains).map(([id, d]) => [id, {
@@ -529,6 +578,9 @@ handlers.status = (ws, a) => {
   if (p.ready.length) lines.push(`Ready to start: ${p.ready.join(", ")}`);
   if (p.awaiting_review.length) lines.push(`Awaiting your review/accept: ${p.awaiting_review.join(", ")}`);
   if (p.pending_approvals.length) lines.push(`Pending human approvals: ${p.pending_approvals.join(", ")}`);
+  for (const r of Object.values(state.agent_requests || {}).filter((x) => x.status === "pending")) {
+    lines.push(`Agent request ${r.id}: ${names[r.from] || r.from} asks for a ${r.position} (${r.why})`);
+  }
   for (const q of p.open_questions) lines.push(`Open question (${q.meeting}): ${q.question}`);
   for (const m of Object.values(state.meetings).filter((m) => ["active", "paused"].includes(m.status))) {
     lines.push(m.mode === "direct"
@@ -887,6 +939,14 @@ export const SPEC = {
           complexity: { help: "small | medium | large" },
           want: { help: "agents the human asked for, comma-separated positions, e.g. \"Payments Expert, Translator:communicator\"" } } },
         domains: { help: "list the domains the team builder knows, with their specialists" },
+        catalog: { help: "every available agent with its job; Captain's picks for the request are pre-checked", positional: ["?request"] },
+        requests: { help: "specialists that agents asked for in their results", options: { ...M, all: { type: "bool" } } },
+        "grant-request": { help: "create the requested specialist and add it to the team", positional: ["request_id"],
+          options: { ...M, team: { help: "@mission (default) or @project" } } },
+        "decline-request": { help: "decline an agent's request for a specialist", positional: ["request_id"], options: { ...M, reason: {} } },
+        build: { help: "build a team from the human's picks (catalog ids or names) and new agents",
+          options: { pick: { help: "comma-separated catalog ids or names, e.g. \"shirin,babak,olivia\"" },
+            want: { help: "new agents by position, e.g. \"Translator, Payments Expert\"" }, id: {}, name: {}, description: {} } },
         "from-template": { help: "create a team from a template", positional: ["template"], options: { id: {} } },
         import: { help: "import a team JSON file", positional: ["path"] },
         show: teamSub([], {}, "show a team (team id, @project or @mission)"),

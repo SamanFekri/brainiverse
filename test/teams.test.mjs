@@ -118,3 +118,25 @@ test("kickoff questions fit AskUserQuestion and skip what the request already an
   const task = teams.kickoffQuestions("add dark mode", { mode: "continue_project" });
   assert.deepEqual([...task.rounds.flat(), ...task.free_text].map((q) => q.id).sort(), ["done", "priority", "scope"]);
 });
+
+test("catalog lists every available agent with its job; Captain's picks are pre-checked; names are unique", () => {
+  const c = teams.catalog({ request: "plan a two-week trip to Japan on a tight budget" });
+  const all = c.groups.flatMap((g) => g.agents);
+  assert.equal(all.length, c.total);
+  assert.equal(c.groups[0].group, "Core team", "groups with recommended agents come first");
+  assert.ok(all.find((a) => a.label === "Babak (Budget Analyst)").recommended);
+  assert.ok(!all.find((a) => a.label === "Tyler (Software Engineer)").recommended);
+  assert.ok(all.every((a) => a.job), "every agent has a job description");
+  const names = all.map((a) => a.label.split(" (")[0]);
+  assert.equal(new Set(names).size, names.length, "no two catalog agents share a name");
+  assert.match(c.text, /☑ Babak \(Budget Analyst\): /);
+});
+
+test("build a team from the human's picks plus brand-new agents; the leader is always in", () => {
+  const team = teams.buildTeam({ picks: ["shirin", "Babak", "itinerary-planner", "Tyler (Software Engineer)"], want: ["Translator"], teamId: "mine" });
+  assert.deepEqual(team.agents.map((a) => registry.label(a)),
+    ["Captain (Leader)", "Shirin (Researcher)", "Babak (Budget Analyst)", "Olivia (Itinerary Planner)", "Tyler (Software Engineer)", "Amanda (Translator)"]);
+  assert.equal(team.leader, "leader");
+  assert.throws(() => teams.buildTeam({ picks: ["Gandalf"] }), /not in the catalog|no agent "Gandalf"/);
+  assert.equal(teams.buildTeam({ picks: ["captain", "leader"] }).agents.length, 1, "duplicates and the leader are not added twice");
+});

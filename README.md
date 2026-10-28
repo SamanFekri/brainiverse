@@ -103,6 +103,13 @@ it. A project team is the long-lived crew of a repo: it's saved with the project
 `.claude/agents/brainiverse-<id>.md`, so Claude Code knows them and enforces their tools. When the work grows
 ("time to deploy"), new agents join the project team for good.
 
+**You choose the kind of team.** The first kickoff question is the team type, with Captain's recommendation
+marked: a **project team** that stays with the project, a **short-term team** for this mission only, or
+**instant** (no team kept, just get it done). The second asks whether you want specific agents. Name them by
+position ("a Payments Expert and a Translator") and they join next to Captain's picks, each with a fitting role and
+a name. Later, when a project needs a new skill, Captain creates a new agent for it, and asks you first before it
+joins a project team.
+
 **On the same page from the start.** Before anyone works, Captain runs a kickoff interview with clickable
 questions. For a trip: budget, transport (own car, trains, planes, buses), who's travelling, pace, interests,
 stays, special needs, booking. Answers trigger follow-ups (own car → licence and parking; kids → ages), and
@@ -240,7 +247,7 @@ You'll mostly just talk to Captain, who runs these for you. They're also there i
 
 ```bash
 brainiverse intake "Build and launch a web app with user login"   # how should this be handled?
-brainiverse team propose "Build and launch a web app with user login"
+brainiverse team propose "Build and launch a web app with user login" --want "Payments Expert"
 brainiverse project adopt build-and-launch-a-web-app-with-user-login # make it this repo's team
 brainiverse agent rename shirin --team @project --name Sherlock --personality "Deductive, dry-witted"
 brainiverse meeting start --objective "Pick the route" --with shirin,babak

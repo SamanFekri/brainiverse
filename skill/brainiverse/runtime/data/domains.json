@@ -2096,5 +2096,26 @@
         "Only this feature, ask before touching anything else"
       ]
     }
+  ],
+  "kickoff_team": [
+    {
+      "id": "team_type",
+      "header": "Team type",
+      "question": "What kind of team do you want for this?",
+      "options": [
+        "Project team (stays with this project)",
+        "Short-term team (this mission only)",
+        "Instant (no team kept, just get it done)"
+      ]
+    },
+    {
+      "id": "own_agents",
+      "header": "Your picks",
+      "question": "Anyone specific you want on the team? Name them by position, e.g. 'a Payments Expert and a Translator'.",
+      "options": [
+        "Captain picks the team",
+        "I'll add some (I'll name them)"
+      ]
+    }
   ]
 }

@@ -75,13 +75,26 @@ const MAX_PER_ROUND = 4; // AskUserQuestion takes up to 4 questions per call
  * The kickoff interview: everything worth agreeing on before work starts. Questions the request
  * already answers are dropped; choice questions come in rounds of 4, free-text ones separately.
  */
+const TEAM_TYPE_FOR_MODE = { new_project: 0, quick_team: 1 };
+
+/** The team-type question with the option that fits the intake mode first and marked "(Recommended)". */
+function teamQuestions(data, mode) {
+  const [teamType, ownAgents] = structuredClone(data.kickoff_team);
+  const best = TEAM_TYPE_FOR_MODE[mode] ?? 1;
+  const options = [...teamType.options];
+  const [pick] = options.splice(best, 1);
+  teamType.options = [`${pick} (Recommended)`, ...options];
+  return [teamType, ownAgents];
+}
+
 export function kickoffQuestions(text, { mode = "quick_team", domains } = {}) {
   const data = loadData("domains.json");
   const lowered = (text || "").toLowerCase();
   const doms = domains ?? (lowered.trim() ? analyzeMission(text).domains : []);
+  // Team type and the human's own picks come first: they shape everything after.
   const pool = mode === "continue_project"
     ? [...data.kickoff_project_task]
-    : [...doms.flatMap((d) => data.domains[d].questions || []), ...data.kickoff_generic];
+    : [...teamQuestions(data, mode), ...doms.flatMap((d) => data.domains[d].questions || []), ...data.kickoff_generic];
   const seen = new Set();
   const ask = [];
   const answered = [];
@@ -139,7 +152,40 @@ export function leaderAnalysis(base, { capabilities, domains, complexity } = {})
   return analysis;
 }
 
-export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAgents, teamId, analysis: override } = {}) {
+// Words in a requested position → the base role that fits it best (default: specialist).
+const POSITION_ROLES = [
+  [/review|audit|test|qa\b|quality|check/i, "quality_reviewer"],
+  [/research|scout|investigat|explor/i, "researcher"],
+  [/analy|financ|budget|account|data scien|statistic/i, "analyst"],
+  [/coder|developer|engineer|programmer|builder|devops|maker/i, "executor"],
+  [/writer|copy|translat|communicat|pr\b|spokes|negotiat|editor/i, "communicator"],
+  [/planner|coordinat|organi[sz]|project manager|scheduler|assistant/i, "organizer"],
+  [/design|creative|ideas|brainstorm|artist|storytell/i, "creative_thinker"],
+  [/critic|devil|skeptic|challeng|red team/i, "challenger"],
+];
+
+export function roleForPosition(position) {
+  return POSITION_ROLES.find(([pattern]) => pattern.test(position))?.[1] || "specialist";
+}
+
+/** Agents the human asked for: "Payments Expert" or "Translator:communicator" (explicit base role). */
+export function requestedAgents(wants, { theme, taken }) {
+  const names = [...taken];
+  return wants.map((want) => {
+    const [rawPosition, rawRole] = want.split(":").map((s) => s.trim());
+    if (!rawPosition) throw new BrainiverseError("empty agent request");
+    const archetype = rawRole || roleForPosition(rawPosition);
+    if (!(archetype in registry.archetypes())) throw new BrainiverseError(`unknown base role ${archetype}`);
+    const name = registry.unusedName(theme, names) || rawPosition;
+    names.push(name);
+    return registry.makeAgent(archetype, {
+      id: slugify(rawPosition), theme, name, position: rawPosition,
+      description: `${rawPosition}, requested by the human.`,
+    });
+  });
+}
+
+export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAgents, teamId, analysis: override, want = [], mode = "quick_team" } = {}) {
   const analysis = leaderAnalysis(analyzeMission(missionText), override);
   const domainsData = loadData("domains.json").domains;
   const lowered = missionText.toLowerCase();
@@ -189,10 +235,20 @@ export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAg
     covered.add(capability);
   }
 
-  const cap = Math.min(maxAgents || SIZE_CAP[analysis.complexity], HARD_MAX_AGENTS);
+  // The human's own picks always make the team; Captain's picks fill the remaining room.
+  const requested = requestedAgents(want, { theme, taken: members.map((m) => m.profile.name) })
+    .map((profile) => {
+      const base = profile.id;
+      for (let n = 2; usedIds.has(profile.id); n++) profile.id = `${base}-${n}`;
+      usedIds.add(profile.id);
+      return { tag: "requested", profile, reason: "Requested by you." };
+    });
+  if (requested.length + 1 > HARD_MAX_AGENTS) throw new BrainiverseError(`a team can have at most ${HARD_MAX_AGENTS} agents`);
+  // The human's picks come on top of Captain's; Captain's lowest-priority picks give way only at the hard limit.
+  const cap = Math.min(maxAgents || SIZE_CAP[analysis.complexity], HARD_MAX_AGENTS - requested.length);
   const rank = (tag) => (PRIORITY.includes(tag) ? PRIORITY.indexOf(tag) : PRIORITY.length);
   members.sort((a, b) => rank(a.tag) - rank(b.tag));
-  const chosen = members.slice(0, cap);
+  const chosen = [...members.slice(0, cap), ...requested];
   const optional = members.slice(cap);
 
   const team = validateTeam({
@@ -212,7 +268,7 @@ export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAg
     team,
     reasons: Object.fromEntries(chosen.map((m) => [m.profile.id, m.reason])),
     optional: optional.map((m) => ({ id: m.profile.id, name: m.profile.name, archetype: m.profile.archetype, reason: m.reason })),
-    kickoff: kickoffQuestions(missionText, { domains: analysis.domains }),
+    kickoff: kickoffQuestions(missionText, { domains: analysis.domains, mode }),
     assumptions: analysis.assumptions,
   };
 }

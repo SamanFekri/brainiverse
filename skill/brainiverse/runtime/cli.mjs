@@ -229,7 +229,9 @@ handlers.team = (ws, a, sub) => {
       domains: a.domains ? splitCsv(a.domains) : undefined,
       complexity: a.complexity,
     };
-    const proposal = teams.proposeTeam(a.mission_text, { theme, maxAgents: a.max, teamId: a.id, analysis: override });
+    const { mode } = project.intake(ws, a.mission_text);
+    const proposal = teams.proposeTeam(a.mission_text, { theme, maxAgents: a.max, teamId: a.id, analysis: override,
+      want: a.want ? splitCsv(a.want) : [], mode: mode === "new_project" ? "new_project" : "quick_team" });
     const { team, reasons, ...rest } = proposal;
     team.status = "draft";
     teams.save(ws, team);
@@ -297,6 +299,10 @@ handlers.mission = (ws, a, sub) => {
         id: a.id, title: a.title, success: a.success || [], constraints: a.constraint || [],
         assumptions: a.assumption || [], resources: a.resource || [], limits: parseLimits(a.limit),
       });
+      if (a.instant) {
+        if (project.projectTeam(ws)?.id === team.id) throw new BrainiverseError("an instant mission can't use the project team");
+        state.instant = true;
+      }
       ws.createMission(state);
       ws.setConfig({ active_mission: state.id });
       audit.log(ws, state.id, "mission_created", { goal: state.goal, team: team.id });
@@ -325,7 +331,19 @@ handlers.mission = (ws, a, sub) => {
         }
         state.status = target;
         audit.log(ws, state.id, `mission_${target}`);
-        return { mission: state.id, status: target };
+        let removedTeam = null;
+        if (sub === "close" && state.instant) {
+          // Instant missions keep nothing: drop their unsaved (draft) team from the library.
+          try {
+            if (teams.load(ws, state.team_ref).status === "draft") {
+              ws.deleteRecord("teams", state.team_ref);
+              removedTeam = state.team_ref;
+            }
+          } catch {
+            // already gone
+          }
+        }
+        return { mission: state.id, status: target, ...(removedTeam ? { removed_team: removedTeam } : {}) };
       });
     }
     case "update":
@@ -866,7 +884,8 @@ export const SPEC = {
         propose: { help: "propose a team for a mission", positional: ["mission_text"], options: { max: { type: "int" }, id: {},
           capabilities: { help: "your own analysis, comma-separated: research, ideation, analysis, build, risk, comms, organize" },
           domains: { help: "your own analysis, comma-separated domain ids (see `domains`)" },
-          complexity: { help: "small | medium | large" } } },
+          complexity: { help: "small | medium | large" },
+          want: { help: "agents the human asked for, comma-separated positions, e.g. \"Payments Expert, Translator:communicator\"" } } },
         domains: { help: "list the domains the team builder knows, with their specialists" },
         "from-template": { help: "create a team from a template", positional: ["template"], options: { id: {} } },
         import: { help: "import a team JSON file", positional: ["path"] },
@@ -887,6 +906,7 @@ export const SPEC = {
       help: "start and manage missions",
       subs: {
         new: { help: "start a mission (team defaults to the project team)", options: { goal: { required: true }, team: {}, id: {}, title: {},
+          instant: { type: "bool", help: "no team is kept: its draft is deleted when the mission closes" },
           success: MULTI, constraint: MULTI, assumption: MULTI, resource: MULTI, limit: { ...MULTI, help: "key=value" } } },
         list: { help: "list missions" },
         use: { help: "switch the active mission", positional: ["mission_id"] },

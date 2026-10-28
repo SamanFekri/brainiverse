@@ -10,6 +10,14 @@ There are two kinds of team. `bv intake` suggests which one a request needs; con
 | Grows | `bv team add @project …` adds a member for good (file written immediately) | `bv team add @mission …` |
 | Set up | `team propose` → one OK → `team approve` → `project adopt <team>` | `team propose` → one OK → `team approve` |
 
+An **instant** mission is a third option: a short-term team that isn't kept. `mission new --instant` deletes its
+draft team when the mission closes. The kickoff's first question asks the human which of the three they want.
+
+**The human's own picks.** Before the team is gathered, the kickoff asks whether they want specific agents. Pass them
+as positions: `team propose "…" --want "Payments Expert, Translator"`. Each gets a fitting base role (reviewer,
+researcher, analyst, builder, communicator, organizer, creative, challenger, or specialist by default) and a free
+name, and always makes the team.
+
 Every agent is shown as **Name (Position)**, e.g. Babak (Budget Analyst). Commands accept the id (`budget-analyst`)
 or the name (`babak`, `Babak`).
 ## 1. Draft

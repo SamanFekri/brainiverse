@@ -1,6 +1,6 @@
 {
   "name": "brainiverse",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "The right minds for every mission: a customizable multi-agent AI team skill for Claude Code.",
   "type": "module",
   "bin": {

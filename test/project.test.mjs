@@ -133,3 +133,46 @@ test("newcomers without a name get a free name from the pool, never a duplicate"
   const names = cli(home, ["team", "show", "trip"]).json.agents.map((a) => a.name.toLowerCase());
   assert.equal(new Set(names).size, names.length);
 });
+
+test("kickoff opens with team type (recommended by request) and the human's own picks", () => {
+  const { home } = projectDir();
+  const app = cli(home, ["intake", "build and ship a todo web app"]).json.kickoff.rounds[0];
+  assert.deepEqual(app.slice(0, 2).map((q) => q.id), ["team_type", "own_agents"]);
+  assert.match(app[0].options[0], /^Project team .*\(Recommended\)$/);
+  const trip = cli(home, ["intake", "plan a trip to Rome"]).json.kickoff.rounds[0];
+  assert.match(trip[0].options[0], /^Short-term team .*\(Recommended\)$/);
+  assert.ok(trip[0].options.some((o) => o.startsWith("Instant")));
+  cli(home, ["team", "from-template", "app-builders", "--id", "todo"]);
+  cli(home, ["project", "adopt", "todo"]);
+  const task = cli(home, ["intake", "add a dark mode toggle"]).json;
+  assert.equal(task.mode, "continue_project");
+  assert.ok(![...task.kickoff.rounds.flat(), ...task.kickoff.free_text].some((q) => q.id === "team_type"),
+    "an existing project team isn't re-chosen for each piece of work");
+});
+
+test("the human's own picks join the proposal with fitting roles and free names, on top of Captain's", () => {
+  const { home } = projectDir();
+  const p = cli(home, ["team", "propose", "build a web app with subscriptions", "--want", "Payments Expert, Translator, Copy Chief:communicator"]).json;
+  const byLabel = Object.fromEntries(p.roster.map((r) => [r.label, r]));
+  assert.equal(byLabel["Amanda (Payments Expert)"].archetype, "specialist");
+  assert.equal(byLabel["Josh (Translator)"].archetype, "communicator");
+  assert.equal(byLabel["Megan (Copy Chief)"].archetype, "communicator");
+  assert.equal(byLabel["Amanda (Payments Expert)"].why, "Requested by you.");
+  assert.ok(byLabel["Nick (Tester)"], "Captain's own picks are kept");
+  assert.match(cli(home, ["team", "propose", "x", "--want", "Wizard:sorcerer"]).err, /unknown base role/);
+});
+
+test("instant missions keep nothing: closing deletes the unsaved team", () => {
+  const { home } = projectDir({ repo: false });
+  const team = cli(home, ["team", "propose", "plan a weekend in Rome", "--id", "rome"]).json.team_id;
+  cli(home, ["mission", "new", "--goal", "Weekend in Rome", "--team", team, "--instant"]);
+  const closed = cli(home, ["mission", "close"]).json;
+  assert.equal(closed.removed_team, "rome");
+  assert.match(cli(home, ["team", "show", "rome"]).err, /no team/);
+  // a saved (approved) team survives an instant mission
+  cli(home, ["team", "propose", "plan a weekend in Paris", "--id", "paris"]);
+  cli(home, ["team", "approve", "paris"]);
+  cli(home, ["mission", "new", "--goal", "Weekend in Paris", "--team", "paris", "--instant"]);
+  assert.equal(cli(home, ["mission", "close"]).json.removed_team, undefined);
+  assert.equal(cli(home, ["team", "show", "paris"]).code, 0);
+});

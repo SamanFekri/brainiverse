@@ -62,6 +62,14 @@ thoroughly at the start rather than guessing and redoing work later.
 
 - `intake` (and `team propose`) return `kickoff`: built-in questions for this kind of mission, already split
   into `rounds` for AskUserQuestion, plus `free_text` questions and the ones the request `already_answered`.
+- **The first round always opens with two team questions:**
+  - **Team type**, with the option that fits the request marked "(Recommended)":
+    *Project team* (stays with this project, agents saved to `.claude/agents/`), *Short-term team* (this mission
+    only; can still be saved at the end) or *Instant* (no team kept, just get it done).
+  - **Your picks**: does the human want specific agents on the team? If yes, ask them to name the positions
+    ("a Payments Expert and a Translator") and pass them to `team propose --want "…"` in Step 3.
+- **Instant** means speed: keep the kickoff to the questions that truly block the work, show the team in one line,
+  start with `mission new --instant`, and don't save memories. Closing the mission deletes its team.
 - **It's a checklist, not a script.** Ask a round, then ask the `follow_ups` that the chosen options trigger
   (own car → driving details; kids → ages; payments → provider). Add your own questions for anything specific
   to this mission, and drop ones that no longer apply. Keep going in as many rounds as it takes, until nothing
@@ -81,6 +89,8 @@ thoroughly at the start rather than guessing and redoing work later.
    The keyword analysis is a first pass. When it misses (check `analysis`), pass your own reading instead:
    `--capabilities research,analysis,build --domains travel,finance --complexity medium`
    (`bv team domains` lists the domains). The runtime validates it.
+   Add the human's own picks with `--want "Payments Expert, Translator"` (positions; append `:role` to force a base
+   role, e.g. `"Copy Chief:communicator"`). They're always included, marked "Requested by you", with a free name.
    Add missing specialists (`bv team add <team> --archetype specialist --name "…" --position "…" --expertise "…"`),
    drop redundant ones, or start from a template (`bv team templates`). Use the kickoff answers: someone
    driving needs no rail planner; a family trip might need a kid-friendly specialist.
@@ -90,8 +100,8 @@ thoroughly at the start rather than guessing and redoing work later.
    🔭 Shirin (Researcher)           regions, seasonality, advisories
    📊 Babak (Budget Analyst)       real costs per option
    ```
-   Say whether it's a **project team** (stays with this project; its agents are added to `.claude/agents/`) or a
-   **quick team** (for this mission). Apply any changes (rename, swap, add, remove, choose another leader).
+   Say which team type it is (as chosen in the kickoff). Apply any changes (rename, swap, add, remove, choose
+   another leader). The human can still name agents they want at this point: add them with `team add`.
 3. On OK: `bv team approve <team>`, and for a project team also `bv project adopt <team>`. That writes each
    agent to `.claude/agents/brainiverse-<id>.md`, so Claude Code enforces its tools, and attaches a PreToolUse
    guard that blocks writes to `.brainiverse/` and `.claude/` and risky commands (push, delete, publish/deploy,
@@ -102,7 +112,8 @@ thoroughly at the start rather than guessing and redoing work later.
 
 - Project team: `bv mission new --goal "…"` (the team defaults to the project team). Each new piece of work on
   the project is a new mission with the same team.
-- Quick team: `bv mission new --goal "…" --team <team> --success "…" --constraint "…"`.
+- Short-term team: `bv mission new --goal "…" --team <team> --success "…" --constraint "…"`.
+- Instant: `bv mission new --goal "…" --team <team> --instant`.
 
 ## Step 5 — Plan and delegate
 
@@ -134,9 +145,12 @@ Then loop:
 
 ## Step 7 — Grow the team
 
-When the work needs a skill the team lacks, add an agent: `bv team add @project …` for a project team (it's
-written to `.claude/agents/` right away) or `bv team add @mission …` for a quick team. Tell the human who
-joined, as Name (Position), and why. For capabilities no agent can provide, see `workflows/skill-discovery.md`.
+When the work needs a skill the team lacks, create a new agent for it. It doesn't have to be an existing one:
+`bv team add <@project|@mission> --archetype <base role> --position "Payments Expert" --expertise "…"` (a free
+name is picked automatically).
+- **Project team:** ask first, in one line: *"We need payments expertise. Add Amanda (Payments Expert) to the
+  project team?"* Only on OK run `team add @project …`; it's written to `.claude/agents/` right away.
+- **Short-term or instant team:** add it with `team add @mission …` and tell the human who joined and why. For capabilities no agent can provide, see `workflows/skill-discovery.md`.
 
 ## Step 8 — Debrief
 

@@ -144,6 +144,7 @@ propose a team for a mission
 - `--capabilities <value>` — your own analysis, comma-separated: research, ideation, analysis, build, risk, comms, organize
 - `--domains <value>` — your own analysis, comma-separated domain ids (see `domains`)
 - `--complexity <value>` — small | medium | large
+- `--want <value>` — agents the human asked for, comma-separated positions, e.g. "Payments Expert, Translator:communicator"
 
 ### `brainiverse team domains`
 list the domains the team builder knows, with their specialists
@@ -221,6 +222,7 @@ start a mission (team defaults to the project team)
 - `--team <value>`
 - `--id <value>`
 - `--title <value>`
+- `--instant` — no team is kept: its draft is deleted when the mission closes
 - `--success <value>` — repeatable
 - `--constraint <value>` — repeatable
 - `--assumption <value>` — repeatable

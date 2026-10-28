@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Dariush (Communicator)">
+  <title>Dariush (Communicator)</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1e1b4b"/><stop offset="1" stop-color="#3b0764"/></linearGradient>
+    <radialGradient id="aura" cx="0.5" cy="0.45" r="0.55"><stop offset="0" stop-color="#60a5fa" stop-opacity="0.45"/><stop offset="1" stop-color="#60a5fa" stop-opacity="0"/></radialGradient>
+    <radialGradient id="shade" cx="0.35" cy="0.3" r="0.9"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.18"/></radialGradient>
+    <linearGradient id="suitShine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.12"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.2"/></linearGradient>
+    <linearGradient id="neck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0.25"/><stop offset="0.5" stop-color="#b07a4f"/><stop offset="1" stop-color="#b07a4f"/></linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <clipPath id="badge"><rect width="200" height="200" rx="44"/></clipPath>
+  </defs>
+  <g clip-path="url(#badge)">
+    <rect width="200" height="200" fill="url(#bg)"/>
+    <g stroke="#a5b4fc" stroke-opacity="0.08" stroke-width="1"><path d="M40 0 V200 M0 40 H200"/><path d="M80 0 V200 M0 80 H200"/><path d="M120 0 V200 M0 120 H200"/><path d="M160 0 V200 M0 160 H200"/></g>
+    <circle cx="100" cy="92" r="78" fill="url(#aura)"/>
+    <circle cx="100" cy="92" r="70" fill="none" stroke="#60a5fa" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="3 7"/>
+    <g fill="#e0e7ff"><circle cx="24" cy="30" r="1.4"/><circle cx="176" cy="40" r="1.2"/><circle cx="168" cy="132" r="1.1"/><circle cx="30" cy="140" r="1.1"/></g>
+    <g stroke="#93c5fd" stroke-width="2.5" fill="none" stroke-linecap="round" filter="url(#glow)">
+      <path d="M146 80 q8 12 0 24"/><path d="M154 74 q13 18 0 36"/><path d="M162 68 q18 24 0 48"/></g>
+    
+    
+  <rect x="88" y="118" width="24" height="32" rx="6" fill="url(#neck)"/>
+  <path d="M34 200 C38 160 66 143 100 143 C134 143 162 160 166 200 Z" fill="#1e3a8a"/>
+  <path d="M34 200 C38 160 66 143 100 143 C134 143 162 160 166 200 Z" fill="url(#suitShine)"/>
+  <path d="M78 147 L100 170 L122 147" stroke="#60a5fa" stroke-width="3" fill="none" stroke-linejoin="round" filter="url(#glow)"/>
+  <path d="M50 176 Q58 160 74 152 M150 176 Q142 160 126 152" stroke="#60a5fa" stroke-width="2.2" fill="none" opacity="0.7" stroke-linecap="round"/>
+  <circle cx="100" cy="184" r="10" fill="#0b0a1f" stroke="#60a5fa" stroke-width="2.5" filter="url(#glow)"/>
+  <g transform="translate(100 184)" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="-2" y="-5" width="4" height="7" rx="2"/><path d="M-4 0 a4 4 0 0 0 8 0 M0 4 v2"/></g>
+    
+  <ellipse cx="68" cy="96" rx="6" ry="9" fill="#b07a4f"/><ellipse cx="132" cy="96" rx="6" ry="9" fill="#b07a4f"/>
+  <ellipse cx="100" cy="92" rx="32" ry="36" fill="#b07a4f"/>
+  <ellipse cx="100" cy="92" rx="32" ry="36" fill="url(#shade)"/>
+  <g>
+    <ellipse cx="87" cy="96" rx="7.5" ry="8.5" fill="#fff"/><ellipse cx="113" cy="96" rx="7.5" ry="8.5" fill="#fff"/>
+    <circle cx="88" cy="97" r="4.6" fill="#2d1b10"/><circle cx="114" cy="97" r="4.6" fill="#2d1b10"/>
+    <circle cx="88" cy="97" r="2.2" fill="#0b0a1f"/><circle cx="114" cy="97" r="2.2" fill="#0b0a1f"/>
+    <circle cx="89.8" cy="94.6" r="1.6" fill="#fff"/><circle cx="115.8" cy="94.6" r="1.6" fill="#fff"/>
+    
+  </g>
+  <path d="M78 82 Q87 77 95 81" stroke="#1f1712" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  <path d="M105 81 Q113 77 122 82" stroke="#1f1712" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  <path d="M100 100 Q96.5 107.5 101 108.5" stroke="rgba(0,0,0,0.25)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <circle cx="79" cy="109" r="5" fill="#fb7185" opacity="0.18"/><circle cx="121" cy="109" r="5" fill="#fb7185" opacity="0.18"/>
+  <path d="M90 118 Q100 124 110 118" stroke="#7c2d12" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M66 88 C62 54 86 46 104 48 C126 50 138 60 134 88 C128 70 116 62 98 62 C80 60 70 74 66 88 Z" fill="#111827"/>
+      <path d="M74 64 C88 50 112 48 130 60" stroke="#374151" stroke-width="3" fill="none"/>
+    <path d="M84 113 Q92 108 100 112 Q108 108 116 113 Q108 116 100 115 Q92 116 84 113 Z" fill="#111827"/>
+      <path d="M68 100 C70 120 80 124 92 122" stroke="#cbd5e1" stroke-width="2.5" fill="none"/>
+      <circle cx="94" cy="122" r="3.5" fill="#60a5fa" filter="url(#glow)"/>
+  </g>
+</svg>

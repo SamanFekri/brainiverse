@@ -157,14 +157,25 @@ There are two layers:
 
 ### Meet the default crew
 
-Every agent is shown as **Name (Position)**. The default names are everyday first names, a mix of Iranian and
-American names.
+Every agent is shown as **Name (Position)**. The default names are everyday first names, mostly American with
+Iranian names mixed in, and each core agent comes with a character:
 
-| Leader | Researcher | Creative Thinker | Analyst | Builder |
-|---|---|---|---|---|
-| 🛡️ Captain | 🔭 Shirin | 💡 Jake | 📊 Kaveh | 🔨 Mike |
-| **Challenger** | **Specialist** | **Communicator** | **Organizer** | **Quality Reviewer** |
-| 🧐 Neda | 🧭 Emily | 📣 Dariush | 🗂️ Sarah | 🎯 Parisa |
+<table>
+<tr>
+<td align="center" valign="top" width="20%"><img src="assets/crew/captain.svg" width="110" alt="Captain, Leader"><br><b>Captain</b><br><sub>Leader</sub><br><sub><i>Calls the shots behind a gold visor.</i></sub></td>
+<td align="center" valign="top" width="20%"><img src="assets/crew/shirin.svg" width="110" alt="Shirin, Researcher"><br><b>Shirin</b><br><sub>Researcher</sub><br><sub><i>Her HUD lens never stops scanning sources.</i></sub></td>
+<td align="center" valign="top" width="20%"><img src="assets/crew/jake.svg" width="110" alt="Jake, Creative Thinker"><br><b>Jake</b><br><sub>Creative Thinker</sub><br><sub><i>Spiky hair, brighter ideas.</i></sub></td>
+<td align="center" valign="top" width="20%"><img src="assets/crew/kaveh.svg" width="110" alt="Kaveh, Analyst"><br><b>Kaveh</b><br><sub>Analyst</sub><br><sub><i>Sees the numbers through green-glass specs.</i></sub></td>
+<td align="center" valign="top" width="20%"><img src="assets/crew/mike.svg" width="110" alt="Mike, Builder"><br><b>Mike</b><br><sub>Builder</sub><br><sub><i>Goggles up, wrench ready, ships it.</i></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="20%"><img src="assets/crew/neda.svg" width="110" alt="Neda, Challenger"><br><b>Neda</b><br><sub>Challenger</sub><br><sub><i>One raised eyebrow. Every weak spot found.</i></sub></td>
+<td align="center" valign="top" width="20%"><img src="assets/crew/emily.svg" width="110" alt="Emily, Specialist"><br><b>Emily</b><br><sub>Specialist</sub><br><sub><i>Headset on, compass out, deep expertise.</i></sub></td>
+<td align="center" valign="top" width="20%"><img src="assets/crew/dariush.svg" width="110" alt="Dariush, Communicator"><br><b>Dariush</b><br><sub>Communicator</sub><br><sub><i>Turns findings into words people act on.</i></sub></td>
+<td align="center" valign="top" width="20%"><img src="assets/crew/sarah.svg" width="110" alt="Sarah, Organizer"><br><b>Sarah</b><br><sub>Organizer</sub><br><sub><i>Checks every box before you think of it.</i></sub></td>
+<td align="center" valign="top" width="20%"><img src="assets/crew/parisa.svg" width="110" alt="Parisa, Quality Reviewer"><br><b>Parisa</b><br><sub>Quality Reviewer</sub><br><sub><i>Targeting monocle. Nothing slips past.</i></sub></td>
+</tr>
+</table>
 
 Domain specialists join when a mission needs them, for example Babak (Budget Analyst), Olivia (Itinerary Planner),
 Arash (Architect), Tyler (Coder), Jason (DevOps Engineer) and Madison (Market Researcher). Rename anyone,
@@ -276,7 +287,7 @@ More in [docs/limitations.md](skill/brainiverse/docs/limitations.md), including 
 ## Repository layout
 
 ```
-assets/                     icon and animated kaveh
+assets/                     icon, animated banner and the crew portraits (crew/)
 bin/brainiverse.mjs         npx entry: install / uninstall / doctor (other commands go to the runtime)
 skill/brainiverse/          the skill exactly as it's installed
   SKILL.md                  Captain's playbook (always loaded)
@@ -298,6 +309,7 @@ npm test                                   # node:test, no dependencies
 node skill/brainiverse/bin/brainiverse.mjs --help
 node scripts/gen-cli-docs.mjs              # regenerate the CLI reference after changing commands
 node scripts/gen-team-docs.mjs             # regenerate teams/*.md after changing templates
+node scripts/gen-crew.mjs                  # regenerate the crew portraits in assets/crew/
 npm pack --dry-run                         # see what gets published
 ```
 

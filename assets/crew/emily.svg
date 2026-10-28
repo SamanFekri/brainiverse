@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Emily (Specialist)">
+  <title>Emily (Specialist)</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1e1b4b"/><stop offset="1" stop-color="#3b0764"/></linearGradient>
+    <radialGradient id="aura" cx="0.5" cy="0.45" r="0.55"><stop offset="0" stop-color="#2dd4bf" stop-opacity="0.45"/><stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/></radialGradient>
+    <radialGradient id="shade" cx="0.35" cy="0.3" r="0.9"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.18"/></radialGradient>
+    <linearGradient id="suitShine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.12"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.2"/></linearGradient>
+    <linearGradient id="neck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0.25"/><stop offset="0.5" stop-color="#f5d0b5"/><stop offset="1" stop-color="#f5d0b5"/></linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <clipPath id="badge"><rect width="200" height="200" rx="44"/></clipPath>
+  </defs>
+  <g clip-path="url(#badge)">
+    <rect width="200" height="200" fill="url(#bg)"/>
+    <g stroke="#a5b4fc" stroke-opacity="0.08" stroke-width="1"><path d="M40 0 V200 M0 40 H200"/><path d="M80 0 V200 M0 80 H200"/><path d="M120 0 V200 M0 120 H200"/><path d="M160 0 V200 M0 160 H200"/></g>
+    <circle cx="100" cy="92" r="78" fill="url(#aura)"/>
+    <circle cx="100" cy="92" r="70" fill="none" stroke="#2dd4bf" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="3 7"/>
+    <g fill="#e0e7ff"><circle cx="24" cy="30" r="1.4"/><circle cx="176" cy="40" r="1.2"/><circle cx="168" cy="132" r="1.1"/><circle cx="30" cy="140" r="1.1"/></g>
+    <g filter="url(#glow)" stroke="#5eead4" stroke-width="2" fill="none"><circle cx="40" cy="48" r="14" fill="#2dd4bf" fill-opacity="0.12"/>
+      <path d="M40 38 L44 48 L40 58 L36 48 Z" fill="#5eead4" fill-opacity="0.6"/></g>
+    <path d="M64 90 C60 52 82 46 100 46 C120 46 142 54 136 90 L134 104 L66 104 Z" fill="#c2410c"/>
+      <circle cx="140" cy="52" r="16" fill="#c2410c"/>
+    
+  <rect x="88" y="118" width="24" height="32" rx="6" fill="url(#neck)"/>
+  <path d="M34 200 C38 160 66 143 100 143 C134 143 162 160 166 200 Z" fill="#134e4a"/>
+  <path d="M34 200 C38 160 66 143 100 143 C134 143 162 160 166 200 Z" fill="url(#suitShine)"/>
+  <path d="M78 147 L100 170 L122 147" stroke="#2dd4bf" stroke-width="3" fill="none" stroke-linejoin="round" filter="url(#glow)"/>
+  <path d="M50 176 Q58 160 74 152 M150 176 Q142 160 126 152" stroke="#2dd4bf" stroke-width="2.2" fill="none" opacity="0.7" stroke-linecap="round"/>
+  <circle cx="100" cy="184" r="10" fill="#0b0a1f" stroke="#2dd4bf" stroke-width="2.5" filter="url(#glow)"/>
+  <g transform="translate(100 184)" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle r="5"/><path d="M0 -3 L1.5 0 L0 3 L-1.5 0 Z" fill="#2dd4bf"/></g>
+    
+  <ellipse cx="68" cy="96" rx="6" ry="9" fill="#f5d0b5"/><ellipse cx="132" cy="96" rx="6" ry="9" fill="#f5d0b5"/>
+  <ellipse cx="100" cy="92" rx="32" ry="36" fill="#f5d0b5"/>
+  <ellipse cx="100" cy="92" rx="32" ry="36" fill="url(#shade)"/>
+  <g>
+    <ellipse cx="87" cy="96" rx="7.5" ry="8.5" fill="#fff"/><ellipse cx="113" cy="96" rx="7.5" ry="8.5" fill="#fff"/>
+    <circle cx="88" cy="97" r="4.6" fill="#047857"/><circle cx="114" cy="97" r="4.6" fill="#047857"/>
+    <circle cx="88" cy="97" r="2.2" fill="#0b0a1f"/><circle cx="114" cy="97" r="2.2" fill="#0b0a1f"/>
+    <circle cx="89.8" cy="94.6" r="1.6" fill="#fff"/><circle cx="115.8" cy="94.6" r="1.6" fill="#fff"/>
+    <path d="M79 91 L76 88 M95 90 L97 87 M105 90 L103 87 M121 91 L124 88" stroke="#0b0a1f" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+  <path d="M78 82 Q87 77 95 81" stroke="#9a3412" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  <path d="M105 81 Q113 77 122 82" stroke="#9a3412" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  <path d="M100 100 Q96.5 107.5 101 108.5" stroke="rgba(0,0,0,0.25)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <circle cx="79" cy="109" r="5" fill="#fb7185" opacity="0.18"/><circle cx="121" cy="109" r="5" fill="#fb7185" opacity="0.18"/>
+  <path d="M89 115 Q100 124 111 115" stroke="#7c2d12" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M66 88 C64 58 84 50 100 50 C118 50 136 58 134 86 C124 66 106 62 92 62 C82 68 72 76 66 88 Z" fill="#ea580c"/>
+    <path d="M66 96 C62 70 76 52 100 52 C124 52 138 70 134 96" stroke="#e2e8f0" stroke-width="3.5" fill="none"/>
+      <rect x="60" y="88" width="12" height="18" rx="5" fill="#475569" stroke="#2dd4bf" stroke-width="2"/>
+      <rect x="128" y="88" width="12" height="18" rx="5" fill="#475569" stroke="#2dd4bf" stroke-width="2"/>
+      <path d="M134 90 L150 70" stroke="#94a3b8" stroke-width="2"/><circle cx="150" cy="70" r="4" fill="#2dd4bf" filter="url(#glow)"/>
+  </g>
+</svg>

@@ -22,7 +22,7 @@ real decision comes up, Captain calls everyone into a **war room** with you. Bef
 reviewer checks it.
 
 ```bash
-npx brainiverse install
+npx skills add SamanFekri/brainiverse
 ```
 Open Claude Code, type `/brainiverse`, and describe your mission.
 
@@ -264,11 +264,26 @@ Travel Squad, App Builders, Discovery Crew, Learning Lab, Launch Team and Life O
 You need Node.js 18.17 or newer and Claude Code.
 
 ```bash
+npx skills add SamanFekri/brainiverse
+```
+
+That uses the open [skills](https://skills.sh/) CLI to install Brainiverse from
+[GitHub](https://github.com/SamanFekri/brainiverse) into Claude Code's skills folder. Update later with
+`npx skills update`.
+
+<details>
+<summary>Alternative: install with the brainiverse npm package</summary>
+
+```bash
 npx brainiverse install            # for you: ~/.claude/skills/brainiverse
 npx brainiverse install --project  # just this repo: ./.claude/skills/brainiverse
 npx brainiverse doctor             # check the install
 npx brainiverse uninstall          # remove it (your mission data stays)
 ```
+
+Use one method or the other, not both: `npx brainiverse install` won't overwrite a copy installed by
+`npx skills add`.
+</details>
 
 Start a new Claude Code session, then type `/brainiverse`, or just say *"get me a team to…"*. Mission state
 lives in `.brainiverse/` in your project, so add it to `.gitignore`.

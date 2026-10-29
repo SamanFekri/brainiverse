@@ -28,5 +28,13 @@
     "orchestration"
   ],
   "author": "saman",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SamanFekri/brainiverse.git"
+  },
+  "homepage": "https://github.com/SamanFekri/brainiverse#readme",
+  "bugs": {
+    "url": "https://github.com/SamanFekri/brainiverse/issues"
+  }
 }

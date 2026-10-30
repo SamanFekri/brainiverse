@@ -25,8 +25,9 @@
 - **Team proposals and intake start from keywords.** `team propose` and `intake` use deterministic keyword/domain matching so they're
   predictable and testable; the Leader is expected to refine the roster with judgment.
 - **Skill discovery depends on the environment.** Searching needs web or `npx skills` access; installing
-  needs Bash permission. The static scan is a heuristic, not a security guarantee. New skills generally load
-  in the next session.
+  needs Bash permission. The static scan is a heuristic, not a security guarantee. Newly installed skills reach
+  the Skill tool only from the next Claude Code session; until then agents follow the skill's SKILL.md directly,
+  which covers instructions and scripts but not anything that relies on the skill being registered.
 - **Memory is local.** State is JSON in `.brainiverse/`, per directory and per machine, with no encryption at
   rest. Don't keep sensitive personal data there; secrets are refused.
 - **One machine, one user.** Missions are isolated from each other by directory and lock, but there's no

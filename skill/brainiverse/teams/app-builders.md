@@ -8,7 +8,7 @@ Builds software: requirements, design, implementation, testing, review, deployme
 |---|---|---|---|
 | Captain (Leader) | Captain | `leader` | Leads the project. |
 | Arash (Architect) | Architect | `architect` | Designs the architecture. |
-| Tyler (Coder) | Coder | `coder` | Implements features. |
+| Tyler (Software Engineer) | Coder | `coder` | Implements features across the stack. |
 | Grace (Debugger) | Detective | `debugger` | Investigates bugs. |
 | Yasmin (Designer) | Designer | `designer` | User experience specialist. |
 | Parisa (Quality & Security Reviewer) | Guardian | `reviewer` | Quality and security reviewer. |

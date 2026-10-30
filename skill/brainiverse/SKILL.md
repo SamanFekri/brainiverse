@@ -99,12 +99,23 @@ thoroughly at the start rather than guessing and redoing work later.
    - **create** new agents that aren't in the catalog, by position ("plus a Translator").
    AskUserQuestion helps for quick yes/no choices (multiSelect, up to 4 options per question, e.g. the 3-4 most
    useful unchecked agents); free-text edits are always fine.
-3. **Build from their choices:** `bv team build --pick "shirin,babak,olivia,kaveh" --want "Translator" --id <id>`
+3. **Find helpful skills** (skip for instant missions and simple requests). Use the `find-skills` skill
+   (`/find-skills`) to search for installable skills that would make this team better at this mission, e.g. a
+   slides skill for a pitch or a testing skill for an app. If it isn't installed, run `npx skills find <query>`.
+   Also check what's already installed: `bv skill local <query>`. Follow `workflows/skill-discovery.md`: record
+   only skills that were actually found, scan them, and suggest **at most 3** in the same message as the team,
+   each with the agent who would use it: *"pptx skill → Dariush (Communicator)"*. If no agent on the team fits a
+   valuable skill, suggest a new specialist built around it. Nothing is installed without the human's approval.
+   After approval: install with the source's command, `bv skill verify S# --path <dir>` attaches it to the agent
+   (on a project team its agent file gains the skill and the Skill tool). Skills work right away: each agent's
+   brief (and agent file) gives the path to the skill's SKILL.md, so it can follow it even before Claude Code
+   reloads its skills at the next session.
+4. **Build from their choices:** `bv team build --pick "shirin,babak,olivia,kaveh" --want "Translator" --id <id>`
    (`--pick` takes catalog ids or names; the Leader is always included; `--want` creates new agents with a
    fitting base role and a free name; append `:role` to force one). If they're happy with your picks as-is, the
    proposed team from step 1 can be used directly. Show the final roster once and ask for the one OK. The human
    can still rename, swap or add (`team add`) at this point.
-4. On OK: `bv team approve <team>`, and for a project team also `bv project adopt <team>`. That writes each
+5. On OK: `bv team approve <team>`, and for a project team also `bv project adopt <team>`. That writes each
    agent to `.claude/agents/brainiverse-<id>.md`, so Claude Code enforces its tools, and attaches a PreToolUse
    guard that blocks writes to `.brainiverse/` and `.claude/` and risky commands (push, delete, publish/deploy,
    install, send) unless the agent holds that capability and its current task has an approval. Mention that the
@@ -182,5 +193,5 @@ read-only and local) or `bv dashboard --out board.html` for a snapshot · "what 
 ## Names
 Default theme `people` (Iranian and American first names): Captain (Leader), Shirin (Researcher), Jake (Creative Thinker), Kaveh (Analyst),
 Mike (Builder), Neda (Challenger), Emily (Specialist), Dariush (Communicator), Sarah (Organizer),
-Parisa (Quality Reviewer), plus domain specialists such as Babak (Budget Analyst) or Tyler (Coder).
+Parisa (Quality Reviewer), plus domain specialists such as Babak (Budget Analyst) or Tyler (Software Engineer).
 Other themes: `heroes` (superhero-style names) and `professional` (positions only): `bv themes`.

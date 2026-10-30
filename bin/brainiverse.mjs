@@ -19,30 +19,67 @@ function target(project) {
 }
 
 function installedVersion(dir) {
-  try {
-    return fs.readFileSync(path.join(dir, ".version"), "utf8").trim();
-  } catch {
-    return null;
+  for (const file of ["VERSION", ".version"]) {
+    try {
+      return fs.readFileSync(path.join(dir, file), "utf8").trim();
+    } catch {
+      // try the next marker
+    }
   }
+  return null;
+}
+
+/**
+ * What's at the install location:
+ *   missing      nothing there
+ *   link         a symlink, as the skills CLI may create: it manages that copy
+ *   brainiverse  a Brainiverse skill folder, from this installer or from `npx skills add`
+ *   foreign      something else: never touched
+ */
+function inspect(dest) {
+  let stat;
+  try {
+    stat = fs.lstatSync(dest);
+  } catch {
+    return { kind: "missing" };
+  }
+  if (stat.isSymbolicLink()) return { kind: "link", target: fs.realpathSync(dest), version: installedVersion(dest) };
+  const isOurs = () => {
+    if (installedVersion(dest) && fs.existsSync(path.join(dest, ".version"))) return true;
+    try {
+      const skillMd = fs.readFileSync(path.join(dest, "SKILL.md"), "utf8");
+      return /^name:\s*brainiverse\s*$/m.test(skillMd) && fs.existsSync(path.join(dest, "runtime", "cli.mjs"));
+    } catch {
+      return false;
+    }
+  };
+  return isOurs() ? { kind: "brainiverse", version: installedVersion(dest) } : { kind: "foreign" };
 }
 
 function install(flags) {
   const dest = target(flags.has("--project"));
-  if (fs.existsSync(dest)) {
-    const current = installedVersion(dest);
-    if (!current) {
-      console.error(`error: ${dest} exists but was not installed by brainiverse; refusing to overwrite it.`);
-      return 1;
-    }
-    if (current === VERSION && !flags.has("--force")) {
-      console.log(`brainiverse ${VERSION} is already installed at ${dest} (use --force to reinstall).`);
-      return 0;
-    }
+  const found = inspect(dest);
+  if (found.kind === "foreign") {
+    console.error(`error: ${dest} exists but isn't Brainiverse; refusing to overwrite it.`);
+    return 1;
+  }
+  if (found.kind === "link" && !flags.has("--force")) {
+    console.log(`brainiverse ${found.version ?? ""} at ${dest} is managed by the skills CLI (a link to ${found.target}).`.replace("  ", " "));
+    console.log("Update it with `npx skills update`, or pass --force to replace it with a copy managed by this installer.");
+    return 0;
+  }
+  if (found.kind === "brainiverse" && found.version === VERSION && !flags.has("--force")) {
+    console.log(`brainiverse ${VERSION} is already installed at ${dest} (use --force to reinstall).`);
+    return 0;
+  }
+  if (found.kind !== "missing") {
+    console.log(`Updating brainiverse ${found.version ?? "(unknown version)"} → ${VERSION} at ${dest}`);
     fs.rmSync(dest, { recursive: true, force: true });
   }
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.cpSync(SKILL_SOURCE, dest, { recursive: true });
-  fs.writeFileSync(path.join(dest, ".version"), VERSION + "\n");
+  fs.writeFileSync(path.join(dest, "VERSION"), VERSION + "\n");
+  fs.writeFileSync(path.join(dest, ".version"), VERSION + "\n"); // marks a copy managed by this installer
   fs.chmodSync(path.join(dest, "bin", "brainiverse.mjs"), 0o755);
   console.log(`Installed brainiverse ${VERSION} to ${dest}`);
   console.log("Restart Claude Code (or start a new session), then type /brainiverse or ask for a team.");
@@ -52,13 +89,18 @@ function install(flags) {
 
 function uninstall(flags) {
   const dest = target(flags.has("--project"));
-  if (!fs.existsSync(dest)) {
+  const found = inspect(dest);
+  if (found.kind === "missing") {
     console.log(`Nothing installed at ${dest}.`);
     return 0;
   }
-  if (!installedVersion(dest)) {
-    console.error(`error: ${dest} was not installed by brainiverse; remove it yourself if you mean to.`);
+  if (found.kind === "foreign") {
+    console.error(`error: ${dest} isn't Brainiverse; remove it yourself if you mean to.`);
     return 1;
+  }
+  if (found.kind === "link" && !flags.has("--force")) {
+    console.log(`${dest} is managed by the skills CLI; remove it with the skills CLI, or pass --force to remove the link.`);
+    return 0;
   }
   fs.rmSync(dest, { recursive: true, force: true });
   console.log(`Removed ${dest}. Mission data in .brainiverse/ folders was left untouched.`);
@@ -71,8 +113,11 @@ function doctor() {
   console.log(`node ${process.versions.node} ${nodeOk ? "ok" : "— brainiverse needs >= 18.17"}`);
   for (const project of [false, true]) {
     const dest = target(project);
-    const version = installedVersion(dest);
-    console.log(`${project ? "project" : "user"} skill: ${fs.existsSync(path.join(dest, "SKILL.md")) ? `installed (${version ?? "unknown version"}) at ${dest}` : "not installed"}`);
+    const found = inspect(dest);
+    const how = { link: "via the skills CLI, linked", brainiverse: fs.existsSync(path.join(dest, ".version")) ? "via npx brainiverse" : "via npx skills add" }[found.kind];
+    console.log(`${project ? "project" : "user"} skill: ${
+      found.kind === "missing" ? "not installed" : found.kind === "foreign" ? `${dest} holds something else` :
+        `installed ${found.version ?? "(unknown version)"} ${how} at ${dest}`}${found.version && found.version !== VERSION ? ` (latest here: ${VERSION})` : ""}`);
   }
   const home = process.env.BRAINIVERSE_HOME || path.join(process.cwd(), ".brainiverse");
   console.log(`workspace: ${fs.existsSync(home) ? home : `${home} (created on first use)`}`);

@@ -817,6 +817,16 @@ handlers.skill = (ws, a, sub) => {
     return { gaps: Object.values(s.gaps), candidates: Object.values(s.candidates) };
   }
   if (sub === "recommend") return skills.recommend(ws.readMission(a.mission));
+  if (sub === "verify") {
+    const { item, team } = ws.mission(a.mission, (state) => {
+      const verified = skills.verify(state, a.skill_id, a.path);
+      audit.log(ws, state.id, "skill_integrated", { skill: verified.id, agent: verified.agent, path: verified.installed_path });
+      return { item: verified, team: state.team };
+    });
+    // On a project team the skill belongs to the agent for good: persist it and rewrite its agent file.
+    if (isProjectTeam(ws, team)) saveProjectTeam(ws, team);
+    return item;
+  }
   return ws.mission(a.mission, (state) => {
     switch (sub) {
       case "gap": return skills.addGap(state, a.capability, a.description);
@@ -836,11 +846,6 @@ handlers.skill = (ws, a, sub) => {
         return item;
       }
       case "reject": return skills.reject(state, a.skill_id, a.reason);
-      case "verify": {
-        const item = skills.verify(state, a.skill_id, a.path);
-        audit.log(ws, state.id, "skill_integrated", { skill: item.id, path: item.installed_path });
-        return item;
-      }
     }
     throw new BrainiverseError(`unknown skill command ${sub}`);
   });

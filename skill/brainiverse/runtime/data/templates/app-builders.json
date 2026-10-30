@@ -35,13 +35,13 @@
     {
       "id": "coder",
       "archetype": "executor",
-      "position": "Coder",
+      "position": "Software Engineer",
       "names": {
         "people": "Tyler",
         "heroes": "Coder",
-        "professional": "Coder"
+        "professional": "Software Engineer"
       },
-      "description": "Implements features.",
+      "description": "Implements features across the stack.",
       "expertise": [
         "implementation",
         "refactoring"

@@ -9,6 +9,7 @@ import * as meetings from "./meetings.mjs";
 import * as memory from "./memory.mjs";
 import * as project from "./project.mjs";
 import * as registry from "./registry.mjs";
+import * as skills from "./skills.mjs";
 import * as teams from "./teams.mjs";
 import * as tools from "./tools.mjs";
 import { RUNTIME_DIR } from "./store.mjs";
@@ -63,7 +64,7 @@ export function build(ws, state, task, { inline = false } = {}) {
   if (profile.expertise.length) sections.push(`## Expertise\n${profile.expertise.join(", ")}`);
   if (profile.instructions) sections.push(`## Instructions from the user\n${profile.instructions}`);
   if (profile.decision_rules.length) sections.push(`## Decision rules\n${bullets(profile.decision_rules)}`);
-  if (profile.skills.length) sections.push(`## Skills you may use\n${bullets(profile.skills)}\nInvoke them with the Skill tool when they fit.`);
+  if (profile.skills.length) sections.push(`## Skills you may use\n${skills.skillInstructions(profile.skills).join("\n")}`);
 
   sections.push(`## Mission goal\n${state.goal}`);
   if (state.constraints.length) sections.push(`## Mission constraints\n${bullets(state.constraints)}`);

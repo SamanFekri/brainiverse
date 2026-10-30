@@ -1,6 +1,6 @@
 {
   "name": "brainiverse",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "The right minds for every mission: a customizable multi-agent AI team skill for Claude Code.",
   "type": "module",
   "bin": {
@@ -14,7 +14,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "version": "node scripts/sync-version.mjs && git add skill/brainiverse/VERSION"
   },
   "engines": {
     "node": ">=18.17"

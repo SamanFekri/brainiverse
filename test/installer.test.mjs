@@ -46,3 +46,34 @@ test("unknown commands pass through to the runtime", () => {
   assert.equal(r.status, 0);
   assert.ok(JSON.parse(r.stdout).leader);
 });
+
+test("recognises and updates a copy installed by `npx skills add`; leaves a skills-CLI link alone", () => {
+  const home = tmpdir();
+  const dest = path.join(home, ".claude", "skills", "brainiverse");
+  // what `npx skills add` leaves behind: the skill folder, no .version marker
+  fs.cpSync(path.join(ROOT, "skill", "brainiverse"), dest, { recursive: true });
+  fs.writeFileSync(path.join(dest, "VERSION"), "0.0.1\n");
+  assert.match(run(home, ["doctor"]).stdout, /installed 0\.0\.1 via npx skills add/);
+  const updated = run(home, ["install"]);
+  assert.equal(updated.status, 0);
+  assert.match(updated.stdout, /Updating brainiverse 0\.0\.1 →/);
+  assert.notEqual(fs.readFileSync(path.join(dest, "VERSION"), "utf8").trim(), "0.0.1");
+  assert.equal(run(home, ["uninstall"]).status, 0);
+
+  // a symlinked copy is the skills CLI's to manage
+  const managed = path.join(home, ".agents", "skills", "brainiverse");
+  fs.mkdirSync(path.dirname(managed), { recursive: true });
+  fs.cpSync(path.join(ROOT, "skill", "brainiverse"), managed, { recursive: true });
+  fs.symlinkSync(managed, dest);
+  const linked = run(home, ["install"]);
+  assert.match(linked.stdout, /managed by the skills CLI/);
+  assert.ok(fs.lstatSync(dest).isSymbolicLink(), "the link is untouched");
+  assert.match(run(home, ["uninstall"]).stdout, /managed by the skills CLI/);
+  assert.equal(run(home, ["install", "--force"]).status, 0);
+  assert.ok(!fs.lstatSync(dest).isSymbolicLink(), "--force replaces it with a copy");
+});
+
+test("the skill folder carries the package version", () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
+  assert.equal(fs.readFileSync(path.join(ROOT, "skill", "brainiverse", "VERSION"), "utf8").trim(), pkg.version);
+});

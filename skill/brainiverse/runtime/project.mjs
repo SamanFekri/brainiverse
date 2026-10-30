@@ -8,6 +8,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import * as registry from "./registry.mjs";
+import * as skills from "./skills.mjs";
 import * as teams from "./teams.mjs";
 import * as tools from "./tools.mjs";
 import { BrainiverseError, RUNTIME_DIR } from "./store.mjs";
@@ -62,7 +63,8 @@ export function guardCommand(ws, agentId) {
 /** The Claude Code subagent definition for one project agent (always in Claude Code's format). */
 export function renderAgentFile(team, profile, { guard } = {}) {
   const host = "claude-code";
-  const hostTools = tools.hostTools(profile.capabilities, host);
+  // An agent with attached skills needs the Skill tool, or the tools: list would lock it out of them.
+  const hostTools = [...tools.hostTools(profile.capabilities, host), ...(profile.skills.length ? ["Skill"] : [])];
   const model = tools.hostModel(profile.model, host);
   const position = profile.position || registry.archetypes()[profile.archetype].position;
   const description = `${registry.label(profile)} on the "${team.name}" project team (Brainiverse). ${profile.description} ` +
@@ -88,6 +90,7 @@ export function renderAgentFile(team, profile, { guard } = {}) {
     ...(profile.expertise.length ? ["", `**Expertise:** ${profile.expertise.join(", ")}`] : []),
     ...(profile.instructions ? ["", "## Instructions", profile.instructions] : []),
     ...(profile.decision_rules.length ? ["", "## Decision rules", ...profile.decision_rules.map((r) => `- ${r}`)] : []),
+    ...(profile.skills.length ? ["", "## Skills", ...skills.skillInstructions(profile.skills)] : []),
     "",
     "## Working with the team",
     "- The Brainiverse Leader starts you with a task. Follow the brief in your prompt exactly, including how to report.",

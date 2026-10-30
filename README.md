@@ -244,8 +244,11 @@ Travel Squad, App Builders, Discovery Crew, Learning Lab, Launch Team and Life O
 - 🗂️ **Project teams that stay.** A long-running project keeps its crew, written to `.claude/agents/`, and
   grows it as the work grows.
 - 🧭 **Kickoff interview.** Clickable questions and follow-ups up front, so nobody builds on a wrong guess.
-- 🧭 **Skill discovery.** When the team hits a real gap, it looks for existing skills, scans them for risky
-  patterns, recommends at most three, and installs only with your approval.
+- 🧭 **Skill discovery.** While gathering the team, Captain uses [`/find-skills`](https://skills.sh/) (or
+  `npx skills find`) to look for skills that would make this crew better at your mission, and suggests up to
+  three, each matched to the agent who'd use it. If nobody fits, it suggests a new specialist for that skill. Every
+  skill is scanned for risky patterns and installed only with your approval, and the same search runs whenever the
+  team hits a real gap later.
 - 💾 **Memory and reuse.** Save teams and agents, export or import them as JSON, and keep project, team and
   agent memories that you can inspect, edit or delete.
 - 📋 **Debriefs.** Every mission ends with a report: accepted deliverables, decisions, assumptions,
@@ -281,8 +284,8 @@ npx brainiverse doctor             # check the install
 npx brainiverse uninstall          # remove it (your mission data stays)
 ```
 
-Use one method or the other, not both: `npx brainiverse install` won't overwrite a copy installed by
-`npx skills add`.
+Either method works, and they recognise each other: `npx brainiverse install` updates a copy installed by
+`npx skills add`, and leaves a copy the skills CLI keeps as a link to `npx skills update` (unless you pass `--force`).
 </details>
 
 Start a new Claude Code session, then type `/brainiverse`, or just say *"get me a team to…"*. Mission state
@@ -334,7 +337,7 @@ skill/brainiverse/          the skill exactly as it's installed
   hooks/guard.mjs           PreToolUse guard used by every project agent
   runtime/                  orchestration, registry, team builder, project teams, meetings, permissions,
                             memory, audit, dashboard, usage
-test/                       85 tests: unit, CLI, end-to-end (travel, software, research), project teams, guard,
+test/                       87 tests: unit, CLI, end-to-end (travel, software, research), project teams, guard,
                             dashboard, adapters, usage, installer
 ```
 

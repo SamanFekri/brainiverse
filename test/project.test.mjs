@@ -25,7 +25,7 @@ test("intake routes requests: answer, quick team, new project, continue project,
   cli(home, ["project", "adopt", "todo"]);
   const cont = cli(home, ["intake", "add a dark mode feature"]).json;
   assert.equal(cont.mode, "continue_project");
-  assert.ok(cont.project_team.roster.includes("Tyler (Coder)"));
+  assert.ok(cont.project_team.roster.includes("Tyler (Software Engineer)"));
   assert.equal(mode("plan a trip to Rome"), "quick_team", "one-off missions still get a quick team");
   assert.ok(fs.existsSync(agentFile(root, "coder")));
 });
@@ -40,7 +40,7 @@ test("adopting a project team writes Claude Code agents; changes re-sync", () =>
   const coder = fs.readFileSync(agentFile(root, "coder"), "utf8");
   assert.match(coder, /^---\nname: brainiverse-coder\n/);
   assert.match(coder, /tools: Read, Grep, Glob, Write, Edit, Bash/);
-  assert.match(coder, /# Tyler \(Coder\)/);
+  assert.match(coder, /# Tyler \(Software Engineer\)/);
   const designer = fs.readFileSync(agentFile(root, "designer"), "utf8");
   assert.doesNotMatch(designer, /tools:.*Bash/, "tool lists follow capabilities");
 
@@ -54,7 +54,7 @@ test("adopting a project team writes Claude Code agents; changes re-sync", () =>
   assert.ok(!fs.existsSync(agentFile(root, "a11y")));
   // renaming keeps the file name (id) and updates its contents
   cli(home, ["agent", "rename", "coder", "--team", "@project", "--name", "Peter"]);
-  assert.match(fs.readFileSync(agentFile(root, "coder"), "utf8"), /# Peter \(Coder\)/);
+  assert.match(fs.readFileSync(agentFile(root, "coder"), "utf8"), /# Peter \(Software Engineer\)/);
 });
 
 test("never overwrites agent files brainiverse didn't write; release removes only its own", () => {
@@ -84,7 +84,7 @@ test("project missions use the project team and its own agent types; edits stick
   cli(home, ["task", "add", "--agent", "designer", "--objective", "Design the login screen"]);
   const started = cli(home, ["task", "start", "ready"]).json.started;
   const coder = started.find((s) => s.agent === "coder");
-  assert.equal(coder.label, "Tyler (Coder)");
+  assert.equal(coder.label, "Tyler (Software Engineer)");
   assert.equal(coder.agent_call.subagent_type, "brainiverse-coder");
   assert.match(coder.agent_call.prompt, /task brief T1/, "agents with Bash fetch their own brief");
   assert.ok(coder.fallback);
@@ -192,7 +192,7 @@ test("agents can ask for a specialist mid-mission; the Leader grants (project: p
   assert.match(brief, /agent_requests/, "agents are told they can ask for a specialist");
   const pending = cli(home, ["team", "requests"]).json;
   assert.deepEqual(pending.map((r) => r.position), ["Payments Expert", "Lawyer"]);
-  assert.match(cli(home, ["status"]).out, /Agent request AR1: Tyler \(Coder\) asks for a Payments Expert/);
+  assert.match(cli(home, ["status"]).out, /Agent request AR1: Tyler \(Software Engineer\) asks for a Payments Expert/);
 
   const granted = cli(home, ["team", "grant-request", "AR1"]).json;
   assert.equal(granted.label, "Amanda (Payments Expert)");
@@ -218,4 +218,44 @@ test("software specialists match the request; a generalist only when no speciali
   assert.ok(roster("make a small game in Godot").includes("Hamid (Game Developer)"));
   assert.ok(roster("write a python script to rename files").includes("Tyler (Software Engineer)"));
   assert.ok(!roster("write a python script to rename files").includes("Azadeh (Storyteller)"));
+});
+
+test("skills found for a project agent become part of its agent file, including the Skill tool", () => {
+  const { root, home } = projectDir();
+  cli(home, ["team", "from-template", "app-builders", "--id", "todo"]);
+  cli(home, ["project", "adopt", "todo"]);
+  cli(home, ["mission", "new", "--goal", "Polish the UI"]);
+  assert.doesNotMatch(fs.readFileSync(agentFile(root, "designer"), "utf8"), /^tools:.*Skill/m);
+  const skillDir = path.join(tmpdir(), "ui-polish");
+  fs.mkdirSync(skillDir);
+  fs.writeFileSync(path.join(skillDir, "SKILL.md"), "---\nname: ui-polish\ndescription: polishes interfaces\n---\nPolish things.\n");
+  const s = cli(home, ["skill", "candidate", "--name", "ui-polish", "--source", "local", "--local-path", skillDir, "--purpose", "UI polish", "--agent", "Yasmin"]).json;
+  assert.equal(cli(home, ["skill", "verify", s.id, "--path", skillDir]).json.status, "integrated");
+  const file = fs.readFileSync(agentFile(root, "designer"), "utf8");
+  assert.match(file, /^tools:.*\bSkill\b/m, "the agent can actually invoke its skill");
+  assert.match(file, /## Skills\n- `ui-polish`/);
+  assert.ok(cli(home, ["team", "show", "@project"]).json.agents.find((a) => a.id === "designer").skills.includes("ui-polish"),
+    "the skill sticks to the project team");
+});
+
+test("a skill installed this session works right away: agents get the path to its SKILL.md", () => {
+  const { root, home } = projectDir();
+  const skillsRoot = tmpdir();
+  const skillDir = path.join(skillsRoot, "deck");
+  fs.mkdirSync(skillDir);
+  fs.writeFileSync(path.join(skillDir, "SKILL.md"), "---\nname: deck\ndescription: makes slide decks\n---\nMake slides.\n");
+  const env = { BRAINIVERSE_SKILL_ROOTS: skillsRoot };
+  const run = (args, opts = {}) => cli(home, args, { ...opts, env });
+  run(["team", "from-template", "app-builders", "--id", "todo"]);
+  run(["project", "adopt", "todo"]);
+  run(["mission", "new", "--goal", "Pitch deck"]);
+  const s = run(["skill", "candidate", "--name", "deck", "--source", "local", "--local-path", skillDir, "--purpose", "slides", "--agent", "yasmin"]).json;
+  run(["skill", "verify", s.id, "--path", skillDir]);
+  const file = fs.readFileSync(agentFile(root, "designer"), "utf8");
+  assert.ok(file.includes(`\`deck\`: instructions at ${path.join(skillDir, "SKILL.md")}`));
+  assert.match(file, /read its SKILL\.md with the Read tool and follow it directly/);
+  run(["task", "add", "--agent", "yasmin", "--objective", "Design the deck"]);
+  run(["task", "start", "T1"]);
+  const brief = run(["task", "brief", "T1"], { agent: "designer" }).out;
+  assert.ok(brief.includes(path.join(skillDir, "SKILL.md")), "the brief points at the skill's instructions too");
 });

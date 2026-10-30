@@ -57,6 +57,21 @@ export function skillRoots() {
   return roots;
 }
 
+/**
+ * How an agent uses its skills, as markdown lines. Claude Code loads newly installed skills only at the next
+ * session start, so each skill also names its SKILL.md: if the Skill tool doesn't list it yet, the agent reads
+ * that file and follows it directly. Works the moment the skill is installed.
+ */
+export function skillInstructions(names, inventory = localInventory()) {
+  const where = Object.fromEntries(inventory.map((s) => [s.name, path.join(s.path, "SKILL.md")]));
+  return [
+    ...names.map((name) => `- \`${name}\`${where[name] ? `: instructions at ${where[name]}` : ""}`),
+    "Use them with the Skill tool. If a skill isn't listed there yet (skills installed during this session load " +
+      "only after Claude Code restarts), read its SKILL.md with the Read tool and follow it directly; run any scripts " +
+      "it names from that folder.",
+  ];
+}
+
 /** Skills actually installed where the host loads them from. */
 export function localInventory(roots = skillRoots()) {
   const found = new Map();

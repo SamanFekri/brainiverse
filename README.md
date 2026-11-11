@@ -257,6 +257,10 @@ Travel Squad, App Builders, Discovery Crew, Learning Lab, Launch Team and Life O
   meetings and direct lines, pending approvals, usage.
 - 💰 **Cost tracking.** Token use, tool calls and time per agent and model tier, from what Claude Code reports.
   Set your own prices to see dollars.
+- 🪙 **Light on tokens.** You choose the effort (light, standard or strict), which decides the agents' models and
+  how much reviewing happens. Captain keeps your session's model; agents default to Sonnet. Agents hand back a
+  short summary, their full work goes to a file, and teammates read summaries unless a task needs everything.
+  Project teams keep a project digest and their kickoff answers, so later missions don't start from zero.
 - 🧱 **A guard on every project agent.** A PreToolUse hook stops agents from editing team state or their own
   definitions, and from pushing, deleting, publishing or installing without your approval.
 - 🔌 **Other hosts.** Besides Claude Code, the runtime can hand out agent definitions for the Claude Agent SDK or
@@ -310,6 +314,24 @@ brainiverse mission report
 
 Full reference: [docs/cli.md](skill/brainiverse/docs/cli.md).
 
+## Built to be light on tokens
+
+Every agent run starts from scratch and every word it hands back is paid for again by whoever reads it.
+Brainiverse keeps both small:
+
+| | How |
+|---|---|
+| **Models** | Captain uses your session's model. Agents use Sonnet-class models by default; *light* effort moves simple roles to Haiku-class, *strict* puts analysts and reviewers on the strongest. |
+| **Reviewing** | *light*: Captain checks the work. *standard*: one review of the final deliverable. *strict*: review plus a challenger. |
+| **Results** | Agents return a summary (under 700 characters) and a one-line reply; full results go to files. Captain reviews from summaries and opens a file only when needed. |
+| **Hand-offs** | Teammates get summaries of earlier work; a task asks for the full result only when it truly builds on it. |
+| **Memory** | Project teams keep a project digest, kickoff answers and tagged memories; earlier accepted results are offered for reuse. |
+| **Fewer runs** | Captain does small steps itself and gives each agent one well-batched task; follow-up chats continue the same agent. |
+
+On a scripted reference mission (`node scripts/measure.mjs`), the text that goes into Captain's and the agents'
+context dropped from about 104,500 characters (0.9.0) to about 40,000, and no agent runs on the most expensive
+model by default.
+
 ## Honest limits
 
 - Captain is your main Claude Code session, not a separate process. Subagents can't talk to you directly or
@@ -318,6 +340,8 @@ Full reference: [docs/cli.md](skill/brainiverse/docs/cli.md).
   The guard matches command patterns, so it's a strong safety net, not a sandbox. Quick-team agents run
   as general-purpose subagents guided by their brief. Agents added mid-session become their own types from the
   next session.
+- Cheaper models and lighter checks trade some quality for cost; pick *strict* for anything that ships or
+  costs money. Summaries can drop a detail a later agent needed; the full result is always one file away.
 - `intake` and `team propose` start from keyword and domain matching. That makes it predictable, and Captain refines it
   with judgment.
 
@@ -337,7 +361,7 @@ skill/brainiverse/          the skill exactly as it's installed
   hooks/guard.mjs           PreToolUse guard used by every project agent
   runtime/                  orchestration, registry, team builder, project teams, meetings, permissions,
                             memory, audit, dashboard, usage
-test/                       87 tests: unit, CLI, end-to-end (travel, software, research), project teams, guard,
+test/                       97 tests: unit, CLI, end-to-end (travel, software, research), project teams, guard,
                             dashboard, adapters, usage, installer
 ```
 
@@ -348,6 +372,7 @@ npm test                                   # node:test, no dependencies
 node skill/brainiverse/bin/brainiverse.mjs --help
 node scripts/gen-cli-docs.mjs              # regenerate the CLI reference after changing commands
 node scripts/gen-team-docs.mjs             # regenerate teams/*.md after changing templates
+node scripts/measure.mjs                   # how much text a reference mission puts into context
 node scripts/gen-crew.mjs                  # regenerate the crew portraits in assets/crew/
 npm pack --dry-run                         # see what gets published
 ```

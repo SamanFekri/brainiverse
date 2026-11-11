@@ -27,7 +27,7 @@ const SPAWN_TOOLS = new Set(["Agent", "Task"]);
 //   brainiverse …   npx [-y] brainiverse[@version] …   node "…/brainiverse.mjs" …
 const CLI_CALL = /^(?:\s*[A-Za-z_][A-Za-z0-9_]*=(?:'[^']*'|"[^"]*"|\S*)\s+)*\s*(?:(?:npx\s+(?:-y\s+)?)?brainiverse(?:@\S+)?|node\s+["']?\S*brainiverse\.mjs["']?)(?:\s+(.*))?$/s;
 // What an agent may run: read its own task, submit its result, and read-only views.
-const AGENT_COMMANDS = /^(task\s+(brief|submit|show|list)|status|chat\s+show|meeting\s+show|skill\s+(local|scan)|memory\s+list|archetypes|project\s+status)\b/;
+const AGENT_COMMANDS = /^(task\s+(brief|submit|show|list|results?)|status|chat\s+show|meeting\s+show|skill\s+(local|scan)|memory\s+list|archetypes|project\s+status|project\s+digest(?![^\n]*--file))\b/;
 
 /** The first Brainiverse CLI call in a shell command that an agent isn't allowed to make, if any. */
 export function forbiddenCliCall(command) {

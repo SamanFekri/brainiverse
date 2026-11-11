@@ -98,7 +98,7 @@ test("host adapters: Claude Agent SDK definitions and a generic host", () => {
   const sdk = cli(home, ["task", "start", "T1"]).json.started[0];
   assert.equal(sdk.agent_call.agent_name, "brainiverse-budget-analyst");
   assert.deepEqual(sdk.agent_call.agent_definition.tools, ["Read", "Grep", "Glob", "Bash"]);
-  assert.equal(sdk.agent_call.agent_definition.model, "opus");
+  assert.equal(sdk.agent_call.agent_definition.model, "sonnet");
   assert.match(sdk.agent_call.agent_definition.prompt, /# Babak \(Budget Analyst\)/);
   assert.equal(sdk.leader_submits, true);
   cli(home, ["config", "host", "generic"]);
@@ -111,7 +111,8 @@ test("host adapters: Claude Agent SDK definitions and a generic host", () => {
 test("cost tracking from host-reported usage, by agent and tier, with user-set prices", () => {
   const home = path.join(tmpdir(), ".brainiverse");
   cli(home, ["team", "from-template", "travel-squad"]);
-  cli(home, ["mission", "new", "--goal", "Trip", "--team", "travel-squad", "--limit", "token_budget=50000"]);
+  // quality mode puts the analyst on the strongest tier, so the report has two tiers to break down
+  cli(home, ["mission", "new", "--goal", "Trip", "--team", "travel-squad", "--limit", "token_budget=50000", "--mode", "quality"]);
   cli(home, ["task", "add", "--agent", "shirin", "--objective", "Regions"]);
   cli(home, ["task", "add", "--agent", "babak", "--objective", "Budget"]);
   cli(home, ["task", "start", "ready"]);
@@ -146,20 +147,22 @@ test("dashboard: static snapshot escapes agent text; live server serves state", 
   const server = cliAsync(home, ["dashboard", "--port", "0"]);
   const child = server.child;
   let timer;
-  const url = await new Promise((resolve, reject) => {
-    let buffer = "";
-    child.stdout.on("data", (d) => { buffer += d; const m = buffer.match(/"url": "([^"]+)"/); if (m) resolve(m[1]); });
-    timer = setTimeout(() => reject(new Error("dashboard did not start")), 10000);
-  });
-  clearTimeout(timer);
   const get = (u) => fetch(u, { headers: { connection: "close" } });
+  // Everything after spawning sits inside try/finally, so a failed start can't leave the server running.
   try {
+    const url = await new Promise((resolve, reject) => {
+      let buffer = "";
+      child.stdout.on("data", (d) => { buffer += d; const m = buffer.match(/"url":\s*"([^"]+)"/); if (m) resolve(m[1]); });
+      timer = setTimeout(() => reject(new Error("dashboard did not start")), 10000);
+    });
+    clearTimeout(timer);
     const state = await (await get(url + "api/state")).json();
     assert.equal(state.mission.title, "Trip");
     assert.ok(state.mission.team.agents.some((a) => a.label === "Babak (Budget Analyst)"));
     assert.match(await (await get(url)).text(), /<title>Brainiverse Board<\/title>/);
     assert.equal((await get(url + "nope")).status, 404);
   } finally {
+    clearTimeout(timer);
     child.kill();
     await server;
   }
@@ -185,4 +188,95 @@ test("only Captain creates agents: project agents can't spawn subagents or chang
   ]) {
     assert.equal(forbiddenCliCall(command), null, command);
   }
+});
+
+test("cost settings: balanced by default, economy and quality change agents' models, effort sets both", () => {
+  const home = path.join(tmpdir(), ".brainiverse");
+  cli(home, ["team", "from-template", "travel-squad"]);
+  const models = (flags, id) => {
+    const created = cli(home, ["mission", "new", "--goal", "Trip", "--team", "travel-squad", "--id", id, ...flags]).json;
+    for (const agent of ["shirin", "babak", "parisa", "olivia"]) cli(home, ["task", "add", "--agent", agent, "--objective", `work for ${agent}`]);
+    const started = cli(home, ["task", "start", "ready"]).json.started;
+    return { created, models: Object.fromEntries(started.map((s) => [s.agent, s.agent_call.model])) };
+  };
+  const balanced = models([], "m1");
+  assert.deepEqual([balanced.created.mode, balanced.created.checks], ["balanced", "standard"]);
+  assert.deepEqual(balanced.models, { researcher: "sonnet", "budget-analyst": "sonnet", reviewer: "sonnet", "itinerary-planner": "sonnet" },
+    "no agent runs on the most expensive model by default");
+  const economy = models(["--effort", "light"], "m2");
+  assert.deepEqual([economy.created.mode, economy.created.checks], ["economy", "light"]);
+  assert.equal(economy.models.researcher, "haiku");
+  assert.equal(economy.models.reviewer, "sonnet", "the reviewer never drops to the cheapest model");
+  const quality = models(["--effort", "strict"], "m3");
+  assert.equal(quality.models["budget-analyst"], "opus");
+  assert.equal(quality.models.reviewer, "opus");
+  assert.equal(quality.models.researcher, "sonnet");
+  const mixed = cli(home, ["mission", "new", "--goal", "Trip", "--team", "travel-squad", "--id", "m4", "--effort", "light", "--checks", "strict"]).json;
+  assert.deepEqual([mixed.mode, mixed.checks], ["economy", "strict"], "explicit flags win over effort");
+  assert.equal(cli(home, ["mission", "update", "--mode", "quality"]).json.mode, "quality");
+  assert.match(cli(home, ["mission", "new", "--goal", "x", "--team", "travel-squad", "--id", "m5", "--mode", "turbo"]).err, /mode must be one of/);
+  assert.match(cli(home, ["status"]).out, /models: quality · checks: strict/);
+});
+
+test("check levels shape the team: light has no separate reviewer, strict adds a challenger", () => {
+  const home = path.join(tmpdir(), ".brainiverse");
+  const roster = (flags) => cli(home, ["team", "propose", "Plan a two-week trip to Japan", ...flags]).json.roster.map((r) => r.archetype);
+  assert.ok(roster([]).includes("quality_reviewer"));
+  assert.ok(!roster([]).includes("challenger"));
+  assert.ok(!roster(["--effort", "light"]).includes("quality_reviewer"));
+  assert.ok(roster(["--checks", "strict"]).includes("challenger"));
+  const intake = (text) => cli(home, ["intake", text]).json;
+  assert.equal(intake("deploy our payments service to production").recommended_effort, "strict");
+  assert.equal(intake("just a quick draft of a packing list").recommended_effort, "light");
+  const effort = intake("plan a trip to Rome").kickoff.rounds.flat().find((q) => q.id === "effort");
+  assert.match(effort.options[0], /^Standard.*\(Recommended\)$/);
+});
+
+test("summaries: required and short; the full result goes to a file; the Leader reviews the summary view", () => {
+  const home = path.join(tmpdir(), ".brainiverse");
+  cli(home, ["team", "from-template", "travel-squad"]);
+  cli(home, ["mission", "new", "--goal", "Trip", "--team", "travel-squad"]);
+  cli(home, ["task", "add", "--agent", "shirin", "--objective", "Regions", "--accept", "2 sources each"]);
+  cli(home, ["task", "start", "T1"]);
+  const submit = (payload) => cli(home, ["task", "submit", "T1"], { agent: "researcher", input: JSON.stringify(payload) });
+  assert.match(submit({ status: "complete", findings: "x" }).err, /summary is required/);
+  assert.match(submit({ status: "complete", summary: "y".repeat(800), findings: "x" }).err, /keep it under 700/);
+  const findings = Array.from({ length: 40 }, (_, i) => `detail ${i + 1}: long sourced paragraph about a region`);
+  const ok = submit({ status: "complete", summary: "Kyoto, Tokyo, Osaka fit best; prices unverified.", findings,
+    evidence: ["https://a", "https://b"], blockers: ["Golden Week hotels"] }).json;
+  assert.ok(fs.existsSync(ok.result_file));
+  assert.match(fs.readFileSync(ok.result_file, "utf8"), /## Findings\n- detail 1:[\s\S]*detail 40/);
+
+  const lean = cli(home, ["task", "result", "T1"]).json;
+  assert.equal(lean.summary, "Kyoto, Tokyo, Osaka fit best; prices unverified.");
+  assert.deepEqual(lean.counts, { findings: 40, evidence: 2, assumptions: 0 });
+  assert.deepEqual(lean.blockers, ["Golden Week hotels"]);
+  assert.equal(lean.full_result, ok.result_file);
+  assert.ok(!JSON.stringify(lean).includes("detail 7"), "the summary view leaves the findings out");
+  assert.equal(cli(home, ["task", "result", "T1", "--full"]).json.findings.length, 40);
+  assert.equal(cli(home, ["task", "results"]).json.length, 1);
+  assert.equal(cli(home, ["task", "result", "T1"], { agent: "researcher" }).code, 0, "agents may read results too");
+});
+
+test("teammates get summaries; the whole result only when asked (:full) and always for the reviewer", () => {
+  const home = path.join(tmpdir(), ".brainiverse");
+  cli(home, ["team", "from-template", "travel-squad"]);
+  cli(home, ["mission", "new", "--goal", "Trip", "--team", "travel-squad"]);
+  cli(home, ["task", "add", "--agent", "shirin", "--objective", "Regions"]);
+  cli(home, ["task", "add", "--agent", "babak", "--objective", "Budget", "--after", "T1"]);
+  cli(home, ["task", "add", "--agent", "olivia", "--objective", "Itinerary", "--after", "T1:full"]);
+  cli(home, ["task", "add", "--agent", "parisa", "--objective", "Audit", "--after", "T1"]);
+  cli(home, ["task", "start", "T1"]);
+  runAgent(home, "T1", "researcher", { status: "complete", summary: "SHORT VERSION", findings: ["SECRET DETAIL in the full findings"] });
+  cli(home, ["task", "accept", "T1"]);
+  cli(home, ["task", "start", "ready"]);
+  const brief = (task, agent) => cli(home, ["task", "brief", task], { agent }).out;
+  const budget = brief("T2", "budget-analyst");
+  assert.match(budget, /SHORT VERSION/);
+  assert.doesNotMatch(budget, /SECRET DETAIL/);
+  assert.match(budget, /Full result, only if you need the detail: `.*results\/T1\.md`/);
+  assert.match(brief("T3", "itinerary-planner"), /SECRET DETAIL/, "--after T1:full passes everything");
+  assert.match(brief("T4", "reviewer"), /SECRET DETAIL/, "the reviewer always sees the whole result");
+  assert.match(budget, /whole final reply is one line: `SUBMITTED T2`/);
+  assert.match(cli(home, ["mission", "report"]).out, /SHORT VERSION\n {2}- full result: .*T1\.md/);
 });

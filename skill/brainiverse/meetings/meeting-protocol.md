@@ -81,6 +81,11 @@ bv chat show M2                                    # the transcript; M2 is the c
 bv chat end M2                                     # when the human turns back to the Leader
 ```
 
+**Follow-ups are cheaper when you continue the agent.** From the second message on, `ask` also returns a short
+`continue_prompt`. If you still have that agent running from the previous message, send it that (SendMessage)
+instead of a new Agent call: it already has its brief and the conversation. If continuing isn't possible, use
+`agent_call` as usual.
+
 What the agent gets each time: the conversation so far, a summary of its own earlier results in this
 mission, and its normal tools and permissions. So:
 - **Questions about earlier work** are answered from what it actually did.

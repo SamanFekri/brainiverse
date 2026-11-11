@@ -16,6 +16,27 @@ mission, and I'll assemble the right crew."* Never make the human repeat what th
 - `already_answered`: things the request already settled. Don't ask them.
 - `follow_ups` on some questions: extra questions triggered by a specific answer.
 
+### The first round: team type, the human's picks, effort
+- **Team type**, with the option that fits marked "(Recommended)": *Project team* (stays with this project, agents
+  saved to `.claude/agents/`), *Short-term team* (this mission only; can be saved at the end) or *Instant* (no team
+  kept, just get it done).
+- **Your picks**: does the human want specific agents? If yes, ask for positions ("a Payments Expert and a
+  Translator") and pass them to `team propose --want "…"`.
+- **Effort**, recommended from the request (`intake` returns `recommended_effort`):
+  | Effort | Agents' models | Reviewing |
+  |---|---|---|
+  | light | cheapest that does the job (Haiku-class; builders and reviewers stay Sonnet-class) | you check the work yourself |
+  | standard | Sonnet-class | one Quality Reviewer pass on the final deliverable |
+  | strict | strongest for analysts, challengers and reviewers | reviewer plus a Challenger on key decisions |
+  Recommend *strict* for production code, money, legal or security; *light* for quick drafts and low stakes.
+  Advanced: `--mode economy|balanced|quality` and `--checks light|standard|strict` set the two halves separately.
+
+**Instant** missions: ask only what truly blocks the work, show the team in one line, start with
+`mission new --instant`, and don't save memories. Closing the mission deletes its team.
+
+**Continuing a project:** the kickoff is about this piece of work (what "done" means, priority, scope), not the
+whole project again.
+
 It's a **starting checklist, not a script**:
 1. Ask a round. Read the answers.
 2. Ask the follow-ups those answers trigger, e.g. for a trip:

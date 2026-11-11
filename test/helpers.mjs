@@ -25,7 +25,7 @@ export function missionState(template = "travel-squad", limits = {}) {
   return orchestrator.newMission("Test mission", teams.teamFromTemplate(template), { id: "test", limits });
 }
 
-export const result = (findings = ["done"], extra = {}) => ({ status: "complete", findings, ...extra });
+export const result = (findings = ["done"], extra = {}) => ({ status: "complete", summary: "Done as asked.", findings, ...extra });
 
 /** Run the CLI synchronously. Returns { code, out, err, json }. */
 export function cli(home, args, { input, agent, env = {} } = {}) {
@@ -65,7 +65,9 @@ export function cliAsync(home, args, { input, agent } = {}) {
 export function runAgent(home, taskId, agent, payload) {
   const brief = cli(home, ["task", "brief", taskId], { agent });
   if (brief.code !== 0) throw new Error(`brief failed: ${brief.err}`);
-  const submitted = cli(home, ["task", "submit", taskId], { agent, input: JSON.stringify(payload) });
+  // Deliverable results need a summary; tests that aren't about summaries get a default one.
+  const withSummary = { summary: `Summary of ${taskId}.`, ...payload };
+  const submitted = cli(home, ["task", "submit", taskId], { agent, input: JSON.stringify(withSummary) });
   if (submitted.code !== 0) throw new Error(`submit failed: ${submitted.err}`);
   return brief.out;
 }

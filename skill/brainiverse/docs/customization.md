@@ -105,3 +105,13 @@ bv usage price balanced 3           # your price in USD per million tokens, per 
 bv usage report                     # tokens, tool uses and time by agent and tier; cost where priced
 bv dashboard                        # live read-only board at http://127.0.0.1:4777/
 ```
+
+## Effort: cost versus care
+```bash
+bv mission new --goal "…" --team <team> --effort light      # cheapest models, Captain checks the work
+bv mission new --goal "…" --team <team> --effort standard   # default: Sonnet-class agents, one final review
+bv mission new --goal "…" --team <team> --effort strict     # strongest models for key roles, review + challenger
+bv mission new … --mode economy --checks strict             # set the two halves separately
+bv mission update --effort strict                           # change it mid-mission
+bv agent edit <id> --team @project --set model=deep         # an agent's base tier (mode still adjusts it; "inherit" always uses your session model)
+```

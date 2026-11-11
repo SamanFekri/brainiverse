@@ -104,12 +104,18 @@ export function remove(ws, scope, recordId, { state = null } = {}) {
 }
 
 /** Memory shared with one agent: its own, its team's, and the project's. Never other agents'. */
-export function contextFor(ws, state, agentId, limit = 12) {
+export function contextFor(ws, state, agentId, { tags = [], limit = 8 } = {}) {
   const agentMemory = agentId ? readJson(storePath(ws, "agent", agentId), []) : [];
   const teamMemory = readJson(storePath(ws, "team", state.team_ref), []);
-  return {
-    agent: agentMemory.slice(-limit).map((r) => r.text),
-    team: teamMemory.slice(-limit).map((r) => r.text),
-    project: state.memory.slice(-limit).map((r) => r.text),
-  };
+  // Untagged records are general and always relevant; tagged ones only reach tasks that share a tag.
+  const relevant = (records) => records
+    .filter((r) => !r.tags?.length || (tags.length && r.tags.some((t) => tags.includes(t))))
+    .slice(-limit).map((r) => r.text);
+  return { agent: relevant(agentMemory), team: relevant(teamMemory), project: relevant(state.memory) };
+}
+
+/** Add a record to a scope unless the same text is already there (used for automatic memories). */
+export function remember(ws, scope, text, { tags = [], source = "kickoff", state = null } = {}) {
+  if (list(ws, scope, { state }).some((r) => r.text === text.trim())) return null;
+  return add(ws, scope, text, { tags, source, state });
 }

@@ -78,13 +78,29 @@ const MAX_PER_ROUND = 4; // AskUserQuestion takes up to 4 questions per call
 const TEAM_TYPE_FOR_MODE = { new_project: 0, quick_team: 1 };
 
 /** The team-type question with the option that fits the intake mode first and marked "(Recommended)". */
-function teamQuestions(data, mode) {
-  const [teamType, ownAgents] = structuredClone(data.kickoff_team);
-  const best = TEAM_TYPE_FOR_MODE[mode] ?? 1;
-  const options = [...teamType.options];
-  const [pick] = options.splice(best, 1);
-  teamType.options = [`${pick} (Recommended)`, ...options];
-  return [teamType, ownAgents];
+const EFFORT_ORDER = ["standard", "light", "strict"]; // the order of the effort question's options
+
+const recommendFirst = (options, index) => {
+  const rest = [...options];
+  const [pick] = rest.splice(index, 1);
+  return [`${pick} (Recommended)`, ...rest];
+};
+
+/** Risk words call for strict effort; "quick/simple" wording for light. A suggestion: the human chooses. */
+export function recommendedEffort(text) {
+  const lowered = (text || "").toLowerCase();
+  const risky = ["production", "payment", "payments", "launch", "legal", "contract", "security", "customers", "deploy", "invest", "medical", "tax"];
+  const casual = ["quick", "quickly", "simple", "rough", "draft", "just", "small", "tiny", "brief"];
+  if (risky.some((w) => matches(lowered, w))) return "strict";
+  if (casual.some((w) => matches(lowered, w))) return "light";
+  return "standard";
+}
+
+function teamQuestions(data, mode, text) {
+  const [teamType, ownAgents, effort] = structuredClone(data.kickoff_team);
+  teamType.options = recommendFirst(teamType.options, TEAM_TYPE_FOR_MODE[mode] ?? 1);
+  effort.options = recommendFirst(effort.options, EFFORT_ORDER.indexOf(recommendedEffort(text)));
+  return [teamType, ownAgents, effort];
 }
 
 export function kickoffQuestions(text, { mode = "quick_team", domains } = {}) {
@@ -94,7 +110,7 @@ export function kickoffQuestions(text, { mode = "quick_team", domains } = {}) {
   // Team type and the human's own picks come first: they shape everything after.
   const pool = mode === "continue_project"
     ? [...data.kickoff_project_task]
-    : [...teamQuestions(data, mode), ...doms.flatMap((d) => data.domains[d].questions || []), ...data.kickoff_generic];
+    : [...teamQuestions(data, mode, text), ...doms.flatMap((d) => data.domains[d].questions || []), ...data.kickoff_generic];
   const seen = new Set();
   const ask = [];
   const answered = [];
@@ -111,11 +127,8 @@ export function kickoffQuestions(text, { mode = "quick_team", domains } = {}) {
     rounds,
     free_text: ask.filter((q) => !q.options),
     already_answered: answered,
-    how: "A starting checklist, not a script. Ask the rounds with AskUserQuestion (header, question, options; " +
-      "multiSelect when multi) and the free-text questions in a short message. After each round, ask the follow_ups " +
-      "triggered by the chosen options, add your own questions this particular mission needs, and drop ones that no " +
-      "longer apply. Keep going, in as many rounds as it takes, until nothing important is unclear. Skip anything the " +
-      "human already told you. Then summarize everything you understood and get one OK together with the team.",
+    how: "A checklist, not a script: ask the rounds, then the follow_ups the answers trigger, plus your own " +
+      "questions, until nothing important is unclear (workflows/mission-intake.md).",
   };
 }
 
@@ -185,7 +198,8 @@ export function requestedAgents(wants, { theme, taken }) {
   });
 }
 
-export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAgents, teamId, analysis: override, want = [], mode = "quick_team" } = {}) {
+export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAgents, teamId, analysis: override, want = [], mode = "quick_team",
+  checks = "standard" } = {}) {
   const analysis = leaderAnalysis(analyzeMission(missionText), override);
   const domainsData = loadData("domains.json").domains;
   const lowered = missionText.toLowerCase();
@@ -227,17 +241,20 @@ export function proposeTeam(missionText, { theme = registry.DEFAULT_THEME, maxAg
   // A request that needs many specialists is a bigger mission than its wording suggests: size up.
   const specialistCount = members.filter((m) => m.tag !== "coordination").length;
   const order = ["small", "medium", "large"];
-  if (!override?.complexity && analysis.complexity !== "large" && specialistCount >= SIZE_CAP[analysis.complexity] - 1) {
+  // Light-effort missions stay small: no automatic size-up.
+  if (checks !== "light" && !override?.complexity && analysis.complexity !== "large" && specialistCount >= SIZE_CAP[analysis.complexity] - 1) {
     analysis.complexity = order[order.indexOf(analysis.complexity) + 1];
     analysis.assumptions.push("Several specialists are needed, so this is treated as a larger mission.");
   }
 
-  const needed = [...analysis.capabilities, "review"];
+  // checks: light = Captain reviews the work itself; standard = a reviewer on the team; strict = reviewer + challenger.
+  const needed = [...analysis.capabilities, ...(checks === "light" ? [] : ["review"])];
   if (analysis.complexity !== "large" && needed.includes("organize")) {
     needed.splice(needed.indexOf("organize"), 1);
     analysis.assumptions.push("Coordination is light enough for the Leader; no separate Organizer.");
   }
-  if (analysis.complexity === "large" && !needed.includes("risk")) needed.push("risk");
+  if (checks === "strict" && !needed.includes("risk")) needed.push("risk");
+  if (checks === "light") analysis.assumptions.push("Light checks: no separate reviewer; the Leader checks the work.");
   for (const capability of needed) {
     if (covered.has(capability)) continue;
     const archetype = CAPABILITY_TO_ARCHETYPE[capability];

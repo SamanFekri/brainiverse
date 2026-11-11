@@ -105,7 +105,7 @@ test("ask: follow-up questions and requests reuse one line and see the agent's e
   cli(home, ["mission", "new", "--goal", "Japan trip", "--team", "travel-squad"]);
   cli(home, ["task", "add", "--agent", "Babak", "--objective", "Daily costs per region"]);
   cli(home, ["task", "start", "ready"]);
-  runAgent(home, "T1", "budget-analyst", { status: "complete", findings: "Kyoto is €150/day" });
+  runAgent(home, "T1", "budget-analyst", { status: "complete", summary: "Kyoto is €150/day", findings: "Kyoto is €150/day" });
   cli(home, ["task", "accept", "T1"]);
 
   const first = cli(home, ["ask", "babak", "Why is Kyoto cheaper than Tokyo?"]).json;
@@ -258,4 +258,61 @@ test("a skill installed this session works right away: agents get the path to it
   run(["task", "start", "T1"]);
   const brief = run(["task", "brief", "T1"], { agent: "designer" }).out;
   assert.ok(brief.includes(path.join(skillDir, "SKILL.md")), "the brief points at the skill's instructions too");
+});
+
+test("follow-up messages in a direct line offer a short continue prompt instead of a fresh agent run", () => {
+  const { home } = projectDir({ repo: false });
+  cli(home, ["team", "from-template", "travel-squad"]);
+  cli(home, ["mission", "new", "--goal", "Japan trip", "--team", "travel-squad"]);
+  const first = cli(home, ["ask", "babak", "Can we afford a ryokan?"]).json;
+  assert.equal(first.continue_prompt, undefined, "nothing to continue on the first message");
+  runAgent(home, first.task, "budget-analyst", { status: "complete", findings: "Yes, one night." });
+  const second = cli(home, ["ask", "babak", "Which night?"]).json;
+  assert.match(second.continue_prompt, /The human wrote to you again \(task T2\): "Which night\?"/);
+  assert.match(second.continue_prompt, /task submit T2/);
+  assert.ok(second.continue_prompt.length < 700, "a continue prompt is short");
+  assert.match(second.next, /SendMessage/);
+  assert.ok(second.agent_call.prompt, "a fresh agent call is still there as the fallback");
+});
+
+test("light effort keeps teams small: no automatic size-up", () => {
+  const { home } = projectDir();
+  const size = (flags) => cli(home, ["team", "propose", "Build and launch a web application with user login", ...flags]).json.roster.length;
+  assert.ok(size(["--effort", "light"]) < size([]));
+});
+
+test("project memory saves work: digest in every brief, kickoff answers remembered, tagged memory, past results surfaced", () => {
+  const { root, home } = projectDir();
+  cli(home, ["team", "from-template", "app-builders", "--id", "todo"]);
+  cli(home, ["project", "adopt", "todo"]);
+  // first mission: kickoff answers become team memory; a digest gets written
+  cli(home, ["mission", "new", "--goal", "Add login", "--constraint", "TypeScript only", "--success", "tests pass"]);
+  assert.match(cli(home, ["status"]).out, /No project digest yet/);
+  const digestFile = path.join(tmpdir(), "digest.md");
+  fs.writeFileSync(digestFile, "Stack: Next.js + Postgres. Run: npm run dev. Tests: npm test. Code in src/.");
+  assert.match(cli(home, ["project", "digest", "--file", digestFile], { agent: "coder" }).err, /only the Leader/);
+  assert.equal(cli(home, ["project", "digest", "--file", digestFile]).code, 0);
+  assert.equal(cli(home, ["project", "digest"], { agent: "coder" }).json.digest.startsWith("Stack: Next.js"), true);
+
+  cli(home, ["memory", "add", "Use Stripe test keys only", "--scope", "team:todo", "--tags", "payments"]);
+  cli(home, ["memory", "add", "Login uses magic links", "--scope", "team:todo", "--tags", "auth"]);
+  cli(home, ["task", "add", "--agent", "tyler", "--objective", "Implement magic link login", "--tags", "auth"]);
+  cli(home, ["task", "start", "T1"]);
+  const brief = cli(home, ["task", "brief", "T1"], { agent: "coder" }).out;
+  assert.match(brief, /## Project digest[\s\S]*Stack: Next\.js/);
+  assert.match(brief, /TypeScript only/, "kickoff constraint carried in team memory");
+  assert.match(brief, /Login uses magic links/, "memory with a matching tag is included");
+  assert.doesNotMatch(brief, /Stripe test keys/, "memory tagged for other topics is left out");
+  runAgent(home, "T1", "coder", { status: "complete", summary: "Magic-link login works; 6 tests pass.", findings: "done" });
+  cli(home, ["task", "accept", "T1"]);
+  cli(home, ["mission", "close"]);
+
+  // second mission: the constraint is still known, and the earlier login work is surfaced
+  cli(home, ["mission", "new", "--goal", "Polish login", "--id", "polish"]);
+  const added = cli(home, ["task", "add", "--agent", "tyler", "--objective", "Implement magic link login emails"]).json;
+  assert.equal(added.similar_past_results[0].task, "T1");
+  assert.match(added.similar_past_results[0].summary, /Magic-link login works/);
+  cli(home, ["task", "start", "T1"]);
+  assert.match(cli(home, ["task", "brief", "T1"], { agent: "coder" }).out, /TypeScript only/);
+  assert.ok(fs.existsSync(path.join(root, ".brainiverse", "digest.md")));
 });

@@ -98,7 +98,7 @@
       "file_read",
       "code_exec"
     ],
-    "model": "deep",
+    "model": "balanced",
     "decision_rules": [
       "Show the calculation, not just the number",
       "State the assumptions every figure depends on"
@@ -151,7 +151,7 @@
       "file_read",
       "web_search"
     ],
-    "model": "deep",
+    "model": "balanced",
     "decision_rules": [
       "Disagree only with evidence or a concrete scenario",
       "Say so plainly when a proposal holds up"
@@ -204,7 +204,7 @@
       "file_read",
       "file_write"
     ],
-    "model": "balanced",
+    "model": "fast",
     "decision_rules": [
       "Draft, never send, unless an approved send permission exists"
     ],
@@ -256,7 +256,7 @@
       "web_browse",
       "code_exec"
     ],
-    "model": "deep",
+    "model": "balanced",
     "decision_rules": [
       "Every verdict cites evidence",
       "Never approve by default"

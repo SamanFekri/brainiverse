@@ -43,7 +43,7 @@ test("agents may only read and submit their own work", () => {
   cli(home, ["task", "add", "--agent", "researcher", "--objective", "Research"]);
   cli(home, ["task", "add", "--agent", "budget-analyst", "--objective", "Budget"]);
   cli(home, ["task", "start", "ready"]);
-  const json = JSON.stringify({ status: "complete", findings: "x" });
+  const json = JSON.stringify({ status: "complete", summary: "s", findings: "x" });
   assert.match(cli(home, ["task", "submit", "T2"], { agent: "researcher", input: json }).err, /cannot submit budget-analyst's task/);
   assert.match(cli(home, ["task", "brief", "T2"], { agent: "researcher" }).err, /belongs to budget-analyst/);
   for (const args of [["approval", "request", "--detail", "x"], ["agent", "grant", "researcher", "file_write", "--team", "@mission"],
@@ -62,7 +62,7 @@ test("invalid results are rejected with a useful message", () => {
   cli(home, ["task", "start", "T1"]);
   assert.match(cli(home, ["task", "submit", "T1"], { agent: "researcher", input: "not json" }).err, /not valid JSON/);
   assert.match(cli(home, ["task", "submit", "T1"], { agent: "researcher", input: "{\"status\":\"complete\"}" }).err, /findings/);
-  const fenced = "```json\n{\"status\":\"complete\",\"findings\":\"ok\"}\n```";
+  const fenced = "```json\n{\"status\":\"complete\",\"summary\":\"ok\",\"findings\":\"ok\"}\n```";
   assert.equal(cli(home, ["task", "submit", "T1"], { agent: "researcher", input: fenced }).code, 0, "markdown fences are tolerated");
 });
 
@@ -72,7 +72,7 @@ test("parallel submissions don't lose writes (locking)", async () => {
   for (const a of agents) cli(home, ["task", "add", "--agent", a, "--objective", `work for ${a}`]);
   cli(home, ["task", "start", "ready"]);
   const results = await Promise.all(agents.map((a, i) => cliAsync(home, ["task", "submit", `T${i + 1}`], {
-    agent: a, input: JSON.stringify({ status: "complete", findings: `from ${a}` }),
+    agent: a, input: JSON.stringify({ status: "complete", summary: `from ${a}`, findings: `from ${a}` }),
   })));
   assert.deepEqual(results.map((r) => r.code), [0, 0, 0, 0], results.map((r) => r.err).join("\n"));
   const list = cli(home, ["task", "list"]).json;

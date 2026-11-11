@@ -151,6 +151,49 @@ export function unsync(ws) {
   return removed;
 }
 
+// -- the project digest: one short document every project agent gets instead of re-exploring the repo --
+
+export const digestPath = (ws) => path.join(ws.root, "digest.md");
+
+export function readDigest(ws) {
+  try {
+    return fs.readFileSync(digestPath(ws), "utf8").trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeDigest(ws, text) {
+  if (!text.trim()) throw new BrainiverseError("the digest is empty");
+  fs.writeFileSync(digestPath(ws), text.trim() + "\n");
+  return { digest: digestPath(ws), chars: text.trim().length };
+}
+
+const WORD = /[a-z0-9][a-z0-9-]{2,}/g;
+const STOP = new Set(["the", "and", "for", "with", "this", "that", "from", "into", "add", "make", "build", "write", "update"]);
+const words = (text) => new Set((text.toLowerCase().match(WORD) || []).filter((w) => !STOP.has(w)));
+
+/** Accepted results from earlier missions of the same team that look like this objective, best first. */
+export function similarResults(ws, state, objective, { limit = 3, threshold = 0.3 } = {}) {
+  const wanted = words(objective);
+  if (!wanted.size) return [];
+  const found = [];
+  for (const mission of ws.listMissions()) {
+    if (mission.id === state.id || mission.team_ref !== state.team_ref) continue;
+    for (const task of Object.values(mission.tasks)) {
+      if (task.kind !== "task" || task.status !== "done" || !task.result) continue;
+      const have = words(task.objective);
+      const shared = [...wanted].filter((w) => have.has(w)).length;
+      const score = shared / new Set([...wanted, ...have]).size;
+      if (score >= threshold) {
+        found.push({ mission: mission.id, task: task.id, objective: task.objective, score: Math.round(score * 100) / 100,
+          summary: task.result.summary || "", ...(task.result_file ? { result_file: task.result_file } : {}) });
+      }
+    }
+  }
+  return found.sort((x, y) => y.score - x.score).slice(0, limit);
+}
+
 /** True when this agent can run as its own Claude Code subagent type. */
 export function hasAgentFile(ws, profile) {
   return generatedBy(agentFile(ws, profile.id));
@@ -171,7 +214,8 @@ export function intake(ws, request = "") {
   const roster = team ? team.agents.filter((a) => a.enabled).map(registry.label) : [];
   const projectHits = has(text, PROJECT_SIGNALS);
   const quickHits = has(text, QUICK_SIGNALS);
-  const base = { request: request.trim(), in_code_repo: repo, project_team: team ? { id: team.id, name: team.name, roster } : null };
+  const base = { request: request.trim(), in_code_repo: repo, project_team: team ? { id: team.id, name: team.name, roster } : null,
+    recommended_effort: teams.recommendedEffort(request) };
 
   if (!text) {
     return { ...base, mode: "ask", reason: team ? "The project team is ready; ask what to work on." : "No request yet; ask for the mission." };

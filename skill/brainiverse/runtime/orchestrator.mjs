@@ -35,8 +35,19 @@ export const now = () => Date.now() / 1000;
 
 // -- missions -----------------------------------------------------------------
 
-export function newMission(goal, team, { id, title, success = [], constraints = [], assumptions = [], resources = [], limits = {} } = {}) {
+/** Resolve effort / mode / checks into a valid { mode, checks } pair; explicit mode or checks win over effort. */
+export function costSettings({ effort, mode, checks } = {}, base = tools.EFFORTS.standard) {
+  if (effort && !(effort in tools.EFFORTS)) throw new BrainiverseError(`effort must be one of ${Object.keys(tools.EFFORTS).join(", ")}`);
+  if (mode && !tools.MODES.includes(mode)) throw new BrainiverseError(`mode must be one of ${tools.MODES.join(", ")}`);
+  if (checks && !tools.CHECKS.includes(checks)) throw new BrainiverseError(`checks must be one of ${tools.CHECKS.join(", ")}`);
+  const preset = effort ? tools.EFFORTS[effort] : base;
+  return { mode: mode || preset.mode, checks: checks || preset.checks };
+}
+
+export function newMission(goal, team, { id, title, success = [], constraints = [], assumptions = [], resources = [], limits = {},
+  effort, mode, checks } = {}) {
   if (!goal || !goal.trim()) throw new BrainiverseError("a mission needs a goal");
+  const cost = costSettings({ effort, mode, checks });
   teams.validateTeam(team);
   const merged = { ...DEFAULT_LIMITS };
   for (const [key, value] of Object.entries(limits)) {
@@ -50,6 +61,8 @@ export function newMission(goal, team, { id, title, success = [], constraints = 
     title: title || goal.trim().slice(0, 80),
     goal: goal.trim(),
     status: "active",
+    mode: cost.mode,
+    checks: cost.checks,
     created: now(),
     success_criteria: [...success],
     constraints: [...constraints],
@@ -103,7 +116,7 @@ function createsCycle(state, taskId, dependsOn) {
 
 export function addTask(state, {
   objective, agent, inputs = [], expected_output = "", constraints = [], depends_on = [], acceptance = [],
-  context = "", needs = [], timeout_s, max_retries, parent = null, kind = "task", meeting = null,
+  context = "", needs = [], timeout_s, max_retries, parent = null, kind = "task", meeting = null, tags = [],
 }) {
   requireActive(state);
   if (!objective || !objective.trim()) throw new BrainiverseError("a task needs an objective");
@@ -113,6 +126,9 @@ export function addTask(state, {
   }
   const profile = teams.findAgent(state.team, agent);
   if (!profile.enabled) throw new BrainiverseError(`${profile.name} is disabled`);
+  // "T1:full" marks a dependency whose whole result this task needs, not just its summary.
+  const fullDeps = depends_on.filter((d) => d.endsWith(":full")).map((d) => d.slice(0, -5));
+  depends_on = depends_on.map((d) => d.replace(/:full$/, ""));
   for (const dep of depends_on) if (!(dep in state.tasks)) throw new BrainiverseError(`unknown dependency ${dep}`);
   const unknown = tools.unknownCapabilities(needs);
   if (unknown.length) throw new BrainiverseError(`unknown capabilities ${unknown}`);
@@ -134,6 +150,7 @@ export function addTask(state, {
     expected_output,
     constraints: [...constraints],
     depends_on: [...depends_on],
+    full_deps: fullDeps,
     acceptance: [...acceptance],
     context,
     needs: [...needs],
@@ -150,6 +167,7 @@ export function addTask(state, {
     invocations: [],
     result: null,
     acceptance_evidence: "",
+    tags: [...tags],
     created: now(),
     started: null,
     finished: null,
@@ -252,13 +270,45 @@ export function startTask(state, taskId, at = now()) {
 }
 
 /** Check an agent result against the communication protocol. */
-export function validateResult(result) {
+export const SUMMARY_MAX = 700;
+
+/** A result's summary; results stored before summaries existed get one from the start of their findings. */
+export function summaryOf(result) {
+  if (!result) return "";
+  if (result.summary) return result.summary;
+  const text = typeof result.findings === "string" ? result.findings : (result.findings || []).map(String).join("; ");
+  return text.length <= 300 ? text : `${text.slice(0, 300)}…`;
+}
+
+/** The full result as one readable document, written beside the mission so anyone can open just this file. */
+export function resultDocument(task, agentLabel) {
+  const r = task.result;
+  const list = (items) => items.map((i) => `- ${typeof i === "string" ? i : JSON.stringify(i)}`).join("\n");
+  const section = (title, body) => (body && body.length ? `\n## ${title}\n${Array.isArray(body) ? list(body) : body}\n` : "");
+  return `# ${task.id}: ${task.objective}\n\n${agentLabel} · ${r.status}\n` +
+    section("Summary", summaryOf(r)) + section("Findings", r.findings) + section("Evidence", r.evidence) +
+    section("Assumptions", r.assumptions) + section("Uncertainty", r.uncertainty) + section("Recommendations", r.recommendations) +
+    section("Blockers", r.blockers) + section("Next steps", r.next_steps) + section("Deliverables", r.deliverables) +
+    section("Actions", r.actions);
+}
+
+export function validateResult(result, { requireSummary = false } = {}) {
   if (!result || typeof result !== "object" || Array.isArray(result)) throw new BrainiverseError("result must be a JSON object");
   if (!RESULT_STATUSES.includes(result.status)) {
     throw new BrainiverseError(`result.status must be one of ${RESULT_STATUSES.join(", ")}`);
   }
   if (!result.findings || (Array.isArray(result.findings) && !result.findings.length)) {
     throw new BrainiverseError("result.findings is required (the deliverable or what was found)");
+  }
+  if (requireSummary) {
+    if (typeof result.summary !== "string" || !result.summary.trim()) {
+      throw new BrainiverseError("result.summary is required: about 100 words on the outcome, how sure you are, " +
+        "what is unverified, and any blockers. The Leader and your teammates read this instead of the full findings.");
+    }
+    if (result.summary.length > SUMMARY_MAX) {
+      throw new BrainiverseError(`result.summary is ${result.summary.length} characters; keep it under ${SUMMARY_MAX} ` +
+        "(details belong in findings)");
+    }
   }
   for (const field of RESULT_LIST_FIELDS) {
     result[field] ??= [];
@@ -287,7 +337,8 @@ export function submit(state, taskId, result, { tokens = 0, at = now() } = {}) {
   if (task.status !== "running") {
     throw new BrainiverseError(`${taskId} is ${task.status}; only a running task accepts a submission`);
   }
-  validateResult(result);
+  // Deliverable tasks must carry a summary; meeting and direct-line replies are short already.
+  validateResult(result, { requireSummary: task.kind === "task" });
   Object.assign(state.invocations[task.invocations.at(-1)], { status: "submitted", finished: at, tokens });
   state.usage.tokens += tokens;
   task.result = result;
@@ -326,7 +377,7 @@ export function recordUsage(state, taskId, { tokens, tool_uses, duration_ms, inv
 
 /** Usage by agent and by model tier; cost only where the human set a price (no built-in price list). */
 export function usageReport(state, prices = {}) {
-  const tierOf = Object.fromEntries(state.team.agents.map((a) => [a.id, a.model || "inherit"]));
+  const tierOf = Object.fromEntries(state.team.agents.map((a) => [a.id, tools.effectiveTier(a, state.mode)]));
   const byAgent = {};
   const byTier = {};
   let reported = 0;

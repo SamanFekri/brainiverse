@@ -51,6 +51,22 @@
 - **Cost tracking**: `usage record` stores what the host reports for each Agent run; `usage report` breaks it down
   by agent and model tier, with cost for tiers you price. There's no built-in price list: prices change, so you set them.
 
+- **Token savings**: effort levels (`--effort light|standard|strict`, or `--mode` and `--checks` separately) choose
+  agents' models and how much reviewing happens; no agent defaults to the most expensive tier. Results carry a
+  required summary, full results live in `missions/<id>/results/T#.md`, and Captain reviews with `task results`.
+  Teammates get summaries (`--after T1:full` for everything). Project teams keep a digest, kickoff answers and
+  tagged memories, and `task add` surfaces similar accepted results from earlier missions. `SKILL.md` was halved,
+  and CLI output is compact JSON when read by Claude.
+
+## Trade-offs of the token savings
+- **Cheaper models make more mistakes** on hard analysis and subtle review. *strict* effort buys that back per mission.
+- **Summaries can lose detail.** Agents write them and the runtime checks only that one exists and is short. The
+  full result file, `:full` hand-offs and the reviewer reading full results are the safeguards.
+- **Continuing an agent** in a direct line relies on the host's SendMessage; where it isn't available, Captain
+  starts a fresh run as before.
+- **Light checks** mean no independent reviewer: Captain's acceptance is the only check.
+- **Similar-result detection** is word overlap, not meaning; Captain decides whether an old result still holds.
+
 ## Future improvements
 - Guard coverage for quick-team (general-purpose) agents, e.g. a session-level hook that maps subagent
   invocations to Brainiverse agents.

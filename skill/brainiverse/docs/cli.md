@@ -144,13 +144,18 @@ propose a team for a mission
 - `--capabilities <value>` — your own analysis, comma-separated: research, ideation, analysis, build, risk, comms, organize
 - `--domains <value>` — your own analysis, comma-separated domain ids (see `domains`)
 - `--complexity <value>` — small | medium | large
+- `--effort <value>` — light | standard | strict (light: no separate reviewer; strict: adds a challenger)
+- `--checks <value>` — light | standard | strict
+- `--kickoff` — include the kickoff questions (intake already returns them)
 - `--want <value>` — agents the human asked for, comma-separated positions, e.g. "Payments Expert, Translator:communicator"
 
 ### `brainiverse team domains`
 list the domains the team builder knows, with their specialists
 
 ### `brainiverse team catalog [request]`
-every available agent with its job; Captain's picks for the request are pre-checked
+available agents with their jobs; Captain's picks for the request are pre-checked
+
+- `--all` — every group, not just the relevant ones
 
 ### `brainiverse team requests`
 specialists that agents asked for in their results
@@ -253,6 +258,9 @@ start a mission (team defaults to the project team)
 - `--id <value>`
 - `--title <value>`
 - `--instant` — no team is kept: its draft is deleted when the mission closes
+- `--effort <value>` — light | standard | strict: sets both mode and checks
+- `--mode <value>` — models for agents: economy | balanced (default) | quality
+- `--checks <value>` — reviewing: light | standard (default) | strict
 - `--success <value>` — repeatable
 - `--constraint <value>` — repeatable
 - `--assumption <value>` — repeatable
@@ -287,7 +295,7 @@ close the mission
 - `--force`
 
 ### `brainiverse mission update`
-add criteria/constraints, change limits
+add criteria/constraints, change limits or cost settings
 
 - `--mission <value>` — mission id (default: the active mission)
 - `--success <value>` — repeatable
@@ -295,6 +303,9 @@ add criteria/constraints, change limits
 - `--assumption <value>` — repeatable
 - `--resource <value>` — repeatable
 - `--limit <value>` — repeatable
+- `--effort <value>`
+- `--mode <value>`
+- `--checks <value>`
 
 ### `brainiverse mission finalize`
 save the Leader's synthesis
@@ -330,6 +341,7 @@ add a task
 - `--accept <value>` — acceptance criterion; repeatable
 - `--context <value>`
 - `--needs <value>` — comma-separated capabilities
+- `--tags <value>` — comma-separated topics; the brief includes memories with matching tags (plus untagged ones)
 - `--timeout <n>`
 - `--retries <n>`
 - `--parent <value>`
@@ -346,9 +358,21 @@ tasks ready to run now
 - `--mission <value>` — mission id (default: the active mission)
 
 ### `brainiverse task show <task_id>`
-show a task
+show a task with everything recorded on it
 
 - `--mission <value>` — mission id (default: the active mission)
+
+### `brainiverse task result <task_id>`
+a task's result: summary and what's needed to judge it
+
+- `--mission <value>` — mission id (default: the active mission)
+- `--full` — the whole result instead of the summary view
+
+### `brainiverse task results`
+summary view of every submitted result awaiting review
+
+- `--mission <value>` — mission id (default: the active mission)
+- `--all` — include accepted ones
 
 ### `brainiverse task brief <task_id>`
 the agent's brief
@@ -423,6 +447,11 @@ make a team this project's team and write its agents
 
 ### `brainiverse project sync`
 rewrite .claude/agents/ from the project team
+
+### `brainiverse project digest`
+show the project digest every agent gets, or set it with --file
+
+- `--file <value>`
 
 ### `brainiverse project release`
 stop using a project team (removes its generated agent files)

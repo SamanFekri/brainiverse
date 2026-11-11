@@ -66,6 +66,31 @@ export const HOSTS = Object.keys(TOOL_ADAPTERS);
 
 export const MODEL_TIERS = ["inherit", "fast", "balanced", "deep"];
 
+// Mission-level cost controls.
+//   mode    which models agents run on: economy (cheapest), balanced (default), quality (strongest)
+//   checks  how much reviewing happens: light, standard (default), strict
+//   effort  one human-facing choice that sets both
+export const MODES = ["economy", "balanced", "quality"];
+export const CHECKS = ["light", "standard", "strict"];
+export const EFFORTS = { light: { mode: "economy", checks: "light" }, standard: { mode: "balanced", checks: "standard" },
+  strict: { mode: "quality", checks: "strict" } };
+
+// Roles whose mistakes are costly: quality mode gives them the strongest model, economy never drops them to the cheapest.
+const QUALITY_ROLES = new Set(["analyst", "challenger", "quality_reviewer"]);
+const ECONOMY_FLOOR_ROLES = new Set(["executor", "quality_reviewer"]);
+
+/** The model tier an agent actually runs on in a mission, given the mission's mode. */
+export function effectiveTier(profile, mode = "balanced") {
+  const tier = profile.model || "inherit";
+  if (tier === "inherit") return tier; // the human pinned this agent to the session model
+  if (mode === "quality") return QUALITY_ROLES.has(profile.archetype) ? "deep" : tier;
+  if (mode === "economy") {
+    if (tier === "deep") return "balanced";
+    return ECONOMY_FLOOR_ROLES.has(profile.archetype) ? "balanced" : "fast";
+  }
+  return tier;
+}
+
 export const isGated = (capability) => GATED_RISKS.has(CAPABILITIES[capability].risk);
 
 export const unknownCapabilities = (capabilities) => capabilities.filter((c) => !(c in CAPABILITIES));

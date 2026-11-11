@@ -1,6 +1,7 @@
 // Command-line integration layer. The Leader (the main Claude Code session) drives everything
 // through these commands; subagents may only read their brief and submit their result.
 import fs from "node:fs";
+import path from "node:path";
 import * as audit from "./audit.mjs";
 import * as briefs from "./briefs.mjs";
 import * as dashboard from "./dashboard.mjs";
@@ -19,8 +20,8 @@ import { BrainiverseError, Workspace, loadData, readJson, writeJson } from "./st
 
 // [command, subcommand] pairs a subagent may run. Everything else is Leader-only.
 const AGENT_ALLOWED = new Set([
-  "task brief", "task submit", "task show", "task list", "status", "meeting show", "chat show",
-  "skill local", "skill scan", "archetypes", "memory list", "project status",
+  "task brief", "task submit", "task show", "task list", "task result", "task results", "status", "meeting show", "chat show",
+  "skill local", "skill scan", "archetypes", "memory list", "project status", "project digest",
 ]);
 
 const splitCsv = (value) => (value || "").split(",").map((v) => v.trim()).filter(Boolean);
@@ -217,7 +218,16 @@ handlers.team = (ws, a, sub) => {
       id: t.id, name: t.name, kind: t.id === projectId ? "project" : "quick", agents: t.agents.length, status: t.status || "approved",
     }));
   }
-  if (sub === "catalog") return teams.catalog({ theme, request: a.request || "" });
+  if (sub === "catalog") {
+    const full = teams.catalog({ theme, request: a.request || "" });
+    if (a.all || !a.request) return { recommended: full.recommended, total: full.total, text: full.text };
+    // By default only the groups that matter for this request; the rest are named so the human can ask for them.
+    const relevant = full.groups.filter((g) => g.agents.some((x) => x.recommended));
+    const text = relevant.map((g) => `${g.group}\n` + g.agents.map((x) => `  ${x.recommended ? "☑" : "☐"} ${x.label}: ${x.job}`).join("\n")).join("\n");
+    return { recommended: full.recommended, total: full.total, text,
+      more: full.groups.filter((g) => !relevant.includes(g)).map((g) => `${g.group} (${g.agents.length})`),
+      note: "Showing the relevant groups; `team catalog --all` lists everyone." };
+  }
   if (sub === "requests") {
     const state = ws.readMission(a.mission);
     const rows = Object.values(state.agent_requests || {});
@@ -280,13 +290,16 @@ handlers.team = (ws, a, sub) => {
     };
     const { mode } = project.intake(ws, a.mission_text);
     const proposal = teams.proposeTeam(a.mission_text, { theme, maxAgents: a.max, teamId: a.id, analysis: override,
-      want: a.want ? splitCsv(a.want) : [], mode: mode === "new_project" ? "new_project" : "quick_team" });
+      want: a.want ? splitCsv(a.want) : [], mode: mode === "new_project" ? "new_project" : "quick_team",
+      checks: orchestrator.costSettings({ effort: a.effort, checks: a.checks }).checks });
     const { team, reasons, ...rest } = proposal;
     team.status = "draft";
     teams.save(ws, team);
+    // intake already returned the kickoff questions; repeat them only on request.
+    if (!a.kickoff) delete rest.kickoff;
     return {
       ...rest, team_id: team.id,
-      roster: team.agents.map((p) => ({ id: p.id, label: registry.label(p), archetype: p.archetype, why: reasons[p.id], capabilities: p.capabilities })),
+      roster: team.agents.map((p) => ({ id: p.id, label: registry.label(p), archetype: p.archetype, why: reasons[p.id] })),
     };
   }
   if (sub === "from-template") {
@@ -347,6 +360,7 @@ handlers.mission = (ws, a, sub) => {
       const state = orchestrator.newMission(a.goal, team, {
         id: a.id, title: a.title, success: a.success || [], constraints: a.constraint || [],
         assumptions: a.assumption || [], resources: a.resource || [], limits: parseLimits(a.limit),
+        effort: a.effort, mode: a.mode, checks: a.checks,
       });
       if (a.instant) {
         if (project.projectTeam(ws)?.id === team.id) throw new BrainiverseError("an instant mission can't use the project team");
@@ -354,8 +368,14 @@ handlers.mission = (ws, a, sub) => {
       }
       ws.createMission(state);
       ws.setConfig({ active_mission: state.id });
+      // A project team keeps what the human told it: constraints and success criteria carry over to later missions.
+      if (team.kind === "project") {
+        for (const text of [...(a.constraint || []), ...(a.success || []).map((x) => `Success means: ${x}`)]) {
+          memory.remember(ws, `team:${team.id}`, text, { source: "kickoff" });
+        }
+      }
       audit.log(ws, state.id, "mission_created", { goal: state.goal, team: team.id });
-      return { mission: state.id, team: team.id, limits: state.limits };
+      return { mission: state.id, team: team.id, mode: state.mode, checks: state.checks, limits: state.limits };
     }
     case "list": {
       const active = ws.config().active_mission;
@@ -366,7 +386,7 @@ handlers.mission = (ws, a, sub) => {
       return ws.setConfig({ active_mission: a.mission_id }).active_mission;
     case "show": {
       const s = ws.readMission(a.mission);
-      const keys = ["id", "title", "goal", "status", "success_criteria", "constraints", "assumptions", "resources", "limits", "decisions", "usage"];
+      const keys = ["id", "title", "goal", "status", "mode", "checks", "success_criteria", "constraints", "assumptions", "resources", "limits", "decisions", "usage"];
       return Object.fromEntries(keys.map((k) => [k, s[k]]));
     }
     case "pause":
@@ -404,8 +424,13 @@ handlers.mission = (ws, a, sub) => {
           state.limits[k] = v;
         }
         if (a.limit) audit.log(ws, state.id, "limits_changed", { limits: a.limit });
-        const { success_criteria, constraints, assumptions, resources, limits } = state;
-        return { success_criteria, constraints, assumptions, resources, limits };
+        if (a.effort || a.mode || a.checks) {
+          Object.assign(state, orchestrator.costSettings({ effort: a.effort, mode: a.mode, checks: a.checks },
+            { mode: state.mode || "balanced", checks: state.checks || "standard" }));
+          audit.log(ws, state.id, "cost_settings_changed", { mode: state.mode, checks: state.checks });
+        }
+        const { success_criteria, constraints, assumptions, resources, limits, mode, checks } = state;
+        return { success_criteria, constraints, assumptions, resources, limits, mode, checks };
       });
     case "finalize":
       return ws.mission(a.mission, (state) => {
@@ -426,9 +451,8 @@ export function report(state) {
   if (state.success_criteria.length) lines.push("## Success criteria", ...state.success_criteria.map((c) => `- ${c}`), "");
   lines.push("## Deliverables (accepted work)");
   for (const t of tasks.filter((t) => t.status === "done" && t.kind === "task")) {
-    const f = t.result.findings;
-    const text = typeof f === "string" ? f : f.map(String).join("; ");
-    lines.push(`- **${t.id}** (${names[t.agent]}): ${t.objective}\n  ${text.slice(0, 600)}`);
+    lines.push(`- **${t.id}** (${names[t.agent]}): ${t.objective}\n  ${orchestrator.summaryOf(t.result)}` +
+      (t.result_file ? `\n  - full result: ${t.result_file}` : ""));
     for (const d of t.result.deliverables || []) lines.push(`  - file: ${d.path} — ${d.description || ""}`);
   }
   lines.push("");
@@ -460,6 +484,23 @@ export function report(state) {
   return lines.join("\n");
 }
 
+/** What the Leader needs to judge a result without reading all of it. */
+function leanResult(state, task) {
+  const r = task.result;
+  if (!r) throw new BrainiverseError(`${task.id} has no result yet (status: ${task.status})`);
+  const drop = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => !(Array.isArray(v) ? v.length === 0 : v === "" || v == null)));
+  return drop({
+    task: task.id, agent: registry.label(teams.findAgent(state.team, task.agent)), task_status: task.status,
+    objective: task.objective, result_status: r.status, summary: orchestrator.summaryOf(r),
+    acceptance: task.acceptance, blockers: r.blockers, uncertainty: r.uncertainty,
+    deliverables: (r.deliverables || []).map((d) => d.path || d),
+    unverified_actions: (r.actions || []).filter((x) => !x.verified).map((x) => x.action),
+    agent_requests: (r.agent_requests || []).map((x) => x.position),
+    counts: { findings: Array.isArray(r.findings) ? r.findings.length : 1, evidence: r.evidence.length, assumptions: r.assumptions.length },
+    full_result: task.result_file || `task result ${task.id} --full`,
+  });
+}
+
 function startPayload(ws, state, task, invocation) {
   const { call, leader_submits, fallback } = briefs.agentCall(ws, state, task);
   return {
@@ -478,6 +519,12 @@ handlers.task = (ws, a, sub) => {
     return rows.map((t) => ({ id: t.id, agent: t.agent, status: t.status, objective: t.objective.slice(0, 90), depends_on: t.depends_on, kind: t.kind }));
   }
   if (sub === "show") return orchestrator.getTask(ws.readMission(a.mission), a.task_id);
+  if (sub === "result" || sub === "results") {
+    const state = ws.readMission(a.mission);
+    if (sub === "result") return a.full ? orchestrator.getTask(state, a.task_id).result : leanResult(state, orchestrator.getTask(state, a.task_id));
+    const wanted = a.all ? ["submitted", "done"] : ["submitted"];
+    return Object.values(state.tasks).filter((t) => t.result && t.kind === "task" && wanted.includes(t.status)).map((t) => leanResult(state, t));
+  }
   if (sub === "brief") {
     const state = ws.readMission(a.mission);
     const task = orchestrator.getTask(state, a.task_id);
@@ -492,9 +539,14 @@ handlers.task = (ws, a, sub) => {
           objective: a.objective, agent: a.agent, inputs: a.input || [], expected_output: a.expect || "",
           constraints: a.constraint || [], depends_on: splitCsv(a.after), acceptance: a.accept || [], context: a.context || "",
           needs: splitCsv(a.needs), timeout_s: a.timeout, max_retries: a.retries, parent: a.parent || null,
+          tags: splitCsv(a.tags),
         });
         audit.log(ws, state.id, "task_added", { task: task.id, agent: task.agent, objective: task.objective });
-        return { task: task.id, status: task.status };
+        // On a project team, earlier accepted work may already answer this: show it before anyone redoes it.
+        const similar = state.team.kind === "project" ? project.similarResults(ws, state, task.objective) : [];
+        return { task: task.id, status: task.status,
+          ...(similar.length ? { similar_past_results: similar,
+            note: "Earlier missions have results that look like this task. Reuse them (cancel or narrow this task) if they still hold." } : {}) };
       }
       case "start": {
         const ids = a.task_id === "ready" ? orchestrator.readyTasks(state).map((t) => t.id) : [a.task_id];
@@ -513,8 +565,16 @@ handlers.task = (ws, a, sub) => {
         const result = readPayload(a);
         orchestrator.submit(state, a.task_id, result, { tokens: a.tokens || 0 });
         if (task.kind === "meeting") meetings.recordContribution(state, task);
+        else {
+          // The full result lives in one file; the Leader and teammates read the summary and open this when needed.
+          const file = path.join(ws.missionDir(state.id), "results", `${task.id}.md`);
+          fs.mkdirSync(path.dirname(file), { recursive: true });
+          fs.writeFileSync(file, orchestrator.resultDocument(task, registry.label(teams.findAgent(state.team, task.agent))));
+          task.result_file = file;
+        }
         audit.log(ws, state.id, "task_submitted", { task: task.id, result_status: result.status }, acting || "leader");
-        return { task: task.id, status: task.status, submitted_by: acting || "leader" };
+        return { task: task.id, status: task.status, submitted_by: acting || "leader",
+          ...(task.result_file ? { result_file: task.result_file } : {}) };
       }
       case "accept": {
         const task = orchestrator.accept(state, a.task_id, a.evidence || "");
@@ -564,7 +624,7 @@ handlers.status = (ws, a) => {
   const term = registry.terminology(ws.config().terminology);
   const names = Object.fromEntries(state.team.agents.map((x) => [x.id, registry.label(x)]));
   const lines = [
-    `${term.project}: ${state.title} [${state.status}]`,
+    `${term.project}: ${state.title} [${state.status}] · models: ${state.mode || "balanced"} · checks: ${state.checks || "standard"}`,
     `${term.team}${state.team.kind === "project" ? " (project team)" : ""}: ${state.team.name} — ` +
       state.team.agents.map((x) => `${registry.label(x)}${x.enabled ? "" : " (off)"}`).join(", "),
     `Tasks: ${Object.entries(p.tasks).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(", ") || "none yet"}`,
@@ -578,6 +638,9 @@ handlers.status = (ws, a) => {
   if (p.ready.length) lines.push(`Ready to start: ${p.ready.join(", ")}`);
   if (p.awaiting_review.length) lines.push(`Awaiting your review/accept: ${p.awaiting_review.join(", ")}`);
   if (p.pending_approvals.length) lines.push(`Pending human approvals: ${p.pending_approvals.join(", ")}`);
+  if (state.team.kind === "project" && !project.readDigest(ws)) {
+    lines.push("No project digest yet: write one (`project digest --file`) so agents stop re-exploring the repo.");
+  }
   for (const r of Object.values(state.agent_requests || {}).filter((x) => x.status === "pending")) {
     lines.push(`Agent request ${r.id}: ${names[r.from] || r.from} asks for a ${r.position} (${r.why})`);
   }
@@ -712,6 +775,16 @@ handlers.project = (ws, a, sub) => {
         note: "Agent types added in this session load in the next Claude Code session; until then brainiverse falls back to general-purpose." };
     }
     case "sync": return project.sync(ws, project.requireProjectTeam(ws));
+    case "digest": {
+      if (a.file) {
+        permissions.requireLeader("project digest --file");
+        return project.writeDigest(ws, fs.readFileSync(a.file, "utf8"));
+      }
+      const digest = project.readDigest(ws);
+      return digest ? { digest, path: project.digestPath(ws) }
+        : { digest: null, note: "No digest yet. Have an agent (or yourself) write one: stack, folder layout, how to run and " +
+            "test, conventions, key decisions. Save it with `project digest --file <path>`." };
+    }
     case "release": {
       const team = project.requireProjectTeam(ws);
       const removed = a.keep_files ? [] : project.unsync(ws);
@@ -748,8 +821,15 @@ handlers.ask = (ws, a) => ws.mission(a.mission, (state) => {
   const task = meetings.directMessage(state, chat.id, a.message);
   const invocation = orchestrator.startTask(state, task.id);
   audit.log(ws, state.id, "direct_message", { chat: chat.id, task: task.id, text: a.message });
-  return { chat: chat.id, ...startPayload(ws, state, task, invocation),
-    next: "Invoke the agent_call with the Agent tool, then show the reply verbatim under the agent's Name (Position)." };
+  const payload = startPayload(ws, state, task, invocation);
+  const earlier = chat.messages.filter((m) => m.kind === "contribution").length;
+  return { chat: chat.id, ...payload,
+    ...(earlier ? { continue_prompt: briefs.continuePrompt(ws, state, task, a.message, { inline: Boolean(payload.leader_submits) }) } : {}),
+    next: earlier
+      ? "If you still have this agent running from the previous message, send it continue_prompt (SendMessage) instead " +
+        "of a new Agent call: it already has its brief and the conversation. Otherwise invoke agent_call. Then show the " +
+        "reply verbatim under the agent's Name (Position)."
+      : "Invoke the agent_call with the Agent tool, then show the reply verbatim under the agent's Name (Position)." };
 });
 
 handlers.approval = (ws, a, sub) => {
@@ -942,9 +1022,13 @@ export const SPEC = {
           capabilities: { help: "your own analysis, comma-separated: research, ideation, analysis, build, risk, comms, organize" },
           domains: { help: "your own analysis, comma-separated domain ids (see `domains`)" },
           complexity: { help: "small | medium | large" },
+          effort: { help: "light | standard | strict (light: no separate reviewer; strict: adds a challenger)" },
+          checks: { help: "light | standard | strict" },
+          kickoff: { type: "bool", help: "include the kickoff questions (intake already returns them)" },
           want: { help: "agents the human asked for, comma-separated positions, e.g. \"Payments Expert, Translator:communicator\"" } } },
         domains: { help: "list the domains the team builder knows, with their specialists" },
-        catalog: { help: "every available agent with its job; Captain's picks for the request are pre-checked", positional: ["?request"] },
+        catalog: { help: "available agents with their jobs; Captain's picks for the request are pre-checked", positional: ["?request"],
+          options: { all: { type: "bool", help: "every group, not just the relevant ones" } } },
         requests: { help: "specialists that agents asked for in their results", options: { ...M, all: { type: "bool" } } },
         "grant-request": { help: "create the requested specialist and add it to the team", positional: ["request_id"],
           options: { ...M, team: { help: "@mission (default) or @project" } } },
@@ -972,6 +1056,9 @@ export const SPEC = {
       subs: {
         new: { help: "start a mission (team defaults to the project team)", options: { goal: { required: true }, team: {}, id: {}, title: {},
           instant: { type: "bool", help: "no team is kept: its draft is deleted when the mission closes" },
+          effort: { help: "light | standard | strict: sets both mode and checks" },
+          mode: { help: "models for agents: economy | balanced (default) | quality" },
+          checks: { help: "reviewing: light | standard (default) | strict" },
           success: MULTI, constraint: MULTI, assumption: MULTI, resource: MULTI, limit: { ...MULTI, help: "key=value" } } },
         list: { help: "list missions" },
         use: { help: "switch the active mission", positional: ["mission_id"] },
@@ -979,7 +1066,8 @@ export const SPEC = {
         pause: { help: "pause the mission", options: M },
         resume: { help: "resume the mission", options: M },
         close: { help: "close the mission", options: { ...M, force: { type: "bool" } } },
-        update: { help: "add criteria/constraints, change limits", options: { ...M, success: MULTI, constraint: MULTI, assumption: MULTI, resource: MULTI, limit: MULTI } },
+        update: { help: "add criteria/constraints, change limits or cost settings", options: { ...M, success: MULTI, constraint: MULTI,
+          assumption: MULTI, resource: MULTI, limit: MULTI, effort: {}, mode: {}, checks: {} } },
         finalize: { help: "save the Leader's synthesis", options: { ...M, file: { required: true } } },
         report: { help: "render the mission debrief", options: M },
         log: { help: "show the audit log", options: { ...M, limit: { type: "int", default: 50 } } },
@@ -990,10 +1078,14 @@ export const SPEC = {
       subs: {
         add: { help: "add a task", options: { ...M, agent: { required: true }, objective: { required: true }, input: MULTI, expect: {},
           constraint: MULTI, after: { help: "comma-separated dependency ids" }, accept: { ...MULTI, help: "acceptance criterion" },
-          context: {}, needs: { help: "comma-separated capabilities" }, timeout: { type: "int" }, retries: { type: "int" }, parent: {} } },
+          context: {}, needs: { help: "comma-separated capabilities" },
+          tags: { help: "comma-separated topics; the brief includes memories with matching tags (plus untagged ones)" }, timeout: { type: "int" }, retries: { type: "int" }, parent: {} } },
         list: { help: "list tasks", options: { ...M, status: {} } },
         ready: { help: "tasks ready to run now", options: M },
-        show: taskSub({}, "show a task"),
+        show: taskSub({}, "show a task with everything recorded on it"),
+        result: taskSub({ full: { type: "bool", help: "the whole result instead of the summary view" } },
+          "a task's result: summary and what's needed to judge it"),
+        results: { help: "summary view of every submitted result awaiting review", options: { ...M, all: { type: "bool", help: "include accepted ones" } } },
         brief: taskSub({}, "the agent's brief"),
         start: taskSub({}, "start a task (or 'ready' for all ready tasks) and get Agent-tool calls"),
         submit: taskSub({ file: {}, tokens: { type: "int" } }, "submit a result (JSON on stdin or --file)"),
@@ -1013,6 +1105,7 @@ export const SPEC = {
         status: { help: "show the project team and its Claude Code agent files" },
         adopt: { help: "make a team this project's team and write its agents", positional: ["team"], options: { force: { type: "bool" } } },
         sync: { help: "rewrite .claude/agents/ from the project team" },
+        digest: { help: "show the project digest every agent gets, or set it with --file", options: { file: {} } },
         release: { help: "stop using a project team (removes its generated agent files)", options: { "keep-files": { type: "bool" } } },
       },
     },
@@ -1100,8 +1193,10 @@ export const SPEC = {
   },
 };
 
+// Indented JSON for a person at a terminal; compact JSON when Claude reads it (piped), which costs fewer tokens.
 function print(data) {
-  process.stdout.write((typeof data === "string" ? data : JSON.stringify(data, null, 2)) + "\n");
+  const json = process.stdout.isTTY || process.env.BRAINIVERSE_PRETTY ? JSON.stringify(data, null, 2) : JSON.stringify(data);
+  process.stdout.write((typeof data === "string" ? data : json) + "\n");
 }
 
 export function main(argv = process.argv.slice(2)) {

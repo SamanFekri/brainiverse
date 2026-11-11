@@ -82,7 +82,7 @@ test("software: template → implement → failing review → revise → gated d
   cli(home, ["task", "add", "--agent", "coder", "--objective", "Implement auth", "--after", "T1", "--needs", "file_write,code_exec", "--accept", "tests pass"]);
   startReady(home);
   // a claimed-but-unverified action is rejected
-  const bad = cli(home, ["task", "submit", "T2"], { agent: "coder", input: JSON.stringify(ok("done", { actions: [{ action: "ran tests", verified: true }] })) });
+  const bad = cli(home, ["task", "submit", "T2"], { agent: "coder", input: JSON.stringify(ok("done", { summary: "s", actions: [{ action: "ran tests", verified: true }] })) });
   assert.match(bad.err, /no evidence/);
   runAgent(home, "T2", "coder", ok("auth implemented", { actions: [{ action: "ran tests", verified: true, evidence: "3 passed" }] }));
   cli(home, ["task", "add", "--agent", "reviewer", "--objective", "Review auth", "--after", "T2"]);
